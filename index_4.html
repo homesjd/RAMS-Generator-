@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAMS Builder — Interior Impressions Ltd</title>
+<link rel="stylesheet" href="doc-style.css">
+<style>
+  body{ background:#EFECE3; }
+  .app{
+    display:grid;
+    grid-template-columns:1fr;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  @media (min-width:1100px){
+    .app{ grid-template-columns:480px 1fr; align-items:start; }
+  }
+  .panel{ background:#fff; }
+  .form-panel{
+    padding:0 0 60px;
+    border-right:1px solid #ddd7c6;
+    min-height:100vh;
+  }
+  .topbar{
+    background:var(--navy1);
+    color:#fff;
+    padding:16px 22px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  .topbar img{ height:26px; }
+  .topbar h1{ font-size:15px; margin:0; font-weight:700; letter-spacing:0.02em; }
+  .form-body{ padding:18px 22px 10px; }
+  details.section{
+    border:1px solid #E3DFD2;
+    border-radius:6px;
+    margin-bottom:12px;
+    overflow:hidden;
+  }
+  details.section > summary{
+    list-style:none;
+    cursor:pointer;
+    padding:12px 14px;
+    background:#F7F5EE;
+    font-weight:bold;
+    font-size:13.5px;
+    color:var(--navy1);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  details.section > summary::-webkit-details-marker{ display:none; }
+  details.section > summary::after{ content:"+"; font-size:16px; color:var(--navy2); }
+  details.section[open] > summary::after{ content:"–"; }
+  .section-inner{ padding:14px; }
+  .field{ margin-bottom:12px; }
+  .field label{
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--navy2); font-weight:bold; margin-bottom:4px;
+  }
+  .field input[type="text"], .field input[type="date"], .field input[type="tel"], .field textarea{
+    width:100%; padding:8px 9px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px; font-family:inherit;
+  }
+  .field textarea{ min-height:56px; resize:vertical; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .repeat-item{
+    border:1px solid #E3DFD2; border-radius:5px; padding:10px; margin-bottom:8px; background:#FCFBF8; position:relative;
+  }
+  .repeat-item .rm{
+    position:absolute; top:6px; right:8px; border:none; background:none; color:#b34545; font-size:12px; cursor:pointer;
+  }
+  .add-btn{ background:var(--navy2); color:#fff; border:none; padding:8px 12px; border-radius:4px; font-size:12.5px; cursor:pointer; }
+  .add-btn.sub{ background:#fff; color:var(--navy2); border:1px solid var(--navy2); }
+  .checkline{ display:flex; align-items:center; gap:7px; font-size:13px; margin-bottom:6px; }
+  .hazard-row{ border-top:1px dashed #ddd7c6; padding-top:8px; margin-top:8px; }
+  select{ width:100%; padding:8px 9px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px; background:#fff; }
+  .rr-preview{ font-size:12px; font-weight:bold; padding:4px 8px; border-radius:3px; display:inline-block; margin-top:4px; }
+  .rr-preview.rr-low{ background:#D5EDD8; color:#1D6B32; }
+  .rr-preview.rr-medium{ background:#FCE8B8; color:#8A6100; }
+  .rr-preview.rr-high{ background:#F5C6C6; color:#9B1C1C; }
+  .preview-panel{ background:#EFECE3; padding:24px 20px 80px; }
+  .preview-toolbar{ max-width:900px; margin:0 auto 14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{ border:none; padding:11px 16px; border-radius:4px; font-size:13px; font-weight:bold; cursor:pointer; }
+  .btn-gold{ background:var(--gold); color:var(--navy1); }
+  .btn-navy{ background:var(--navy1); color:#fff; }
+  .btn-outline{ background:#fff; color:var(--navy1); border:1px solid var(--navy1); }
+  .share-box{ max-width:900px; margin:0 auto 18px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:14px 16px; display:none; }
+  .share-box.show{ display:block; }
+  .share-box label{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--navy2); font-weight:bold; display:block; margin-bottom:5px; }
+  .share-row{ display:flex; gap:8px; }
+  .share-row input{ flex:1; padding:9px; border:1px solid var(--line); border-radius:4px; font-size:12.5px; font-family: ui-monospace, monospace; }
+  .doc-wrap{ max-width:900px; margin:0 auto; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .hint{ font-size:11px; color:#8a8577; margin-top:4px; }
+  .coshh-picker{ display:flex; gap:6px; margin-bottom:8px; }
+  .coshh-picker select{ flex:1; }
+  .coshh-chip{
+    display:inline-flex; align-items:center; gap:6px; background:#F1EDE3; border:1px solid var(--line);
+    border-radius:3px; padding:5px 9px; font-size:12.5px; margin:0 6px 6px 0;
+  }
+  .coshh-chip button{ border:none; background:none; color:#b34545; cursor:pointer; font-size:11px; }
+  .check-item{ padding:4px 0; }
+  .check-item.ok{ color:#1D6B32; }
+  .check-item.missing{ color:#9B1C1C; }
+  .trigger-card{
+    border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-bottom:8px; background:#FCFBF8;
+  }
+  .trigger-card p{ margin:0 0 8px; font-size:13px; }
+  .trigger-card .add-btn{ font-size:11.5px; padding:6px 10px; }
+  .trigger-card.danger{ border-color:#9B1C1C; background:#FCEDED; }
+  .add-btn.danger{ background:#9B1C1C; }
+  @media print{
+    .form-panel, .topbar, .preview-toolbar, .share-box{ display:none !important; }
+    .preview-panel{ padding:0; background:#fff; }
+    .doc-wrap{ box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="panel form-panel no-print">
+    <div class="topbar">
+      <img src="" id="topLogo" alt="">
+      <h1>RAMS Builder</h1>
+    </div>
+    <div class="form-body" id="formBody"></div>
+  </div>
+
+  <div class="panel preview-panel">
+    <div class="preview-toolbar no-print">
+      <button class="btn btn-navy" id="printBtn">Print / Save as PDF</button>
+      <button class="btn btn-gold" id="shareBtn">Generate Sign-Off Link</button>
+      <button class="btn btn-outline" id="complianceBtn">Check Compliance (ML 2025)</button>
+      <button class="btn btn-outline" id="loadSampleBtn">Load Sample RAMS</button>
+      <button class="btn btn-outline" id="exportBtn">Export Draft (.json)</button>
+      <button class="btn btn-outline" id="importBtn">Import Draft</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <button class="btn btn-outline" id="clearBtn">Clear Form</button>
+    </div>
+    <div class="share-box no-print" id="complianceBox">
+      <label>RAMS Completeness — Morgan Lovell required sections</label>
+      <div id="completenessList" style="font-size:13px; margin-bottom:14px;"></div>
+      <label>Detected triggers</label>
+      <div id="triggersList" style="font-size:13px;"></div>
+    </div>
+    <div class="share-box no-print" id="shareBox">
+      <label>Link for the operative to view and sign this RAMS</label>
+      <div class="share-row">
+        <input type="text" id="shareLink" readonly>
+        <button class="btn btn-navy" id="copyLinkBtn">Copy</button>
+      </div>
+      <p class="hint">Send this link by text or email. It contains the full RAMS — no login needed. Signed confirmations are recorded in your Netlify Forms dashboard.</p>
+    </div>
+    <div class="doc-wrap" id="docPreview"></div>
+  </div>
+</div>
+
+<script src="logo-data.js"></script>
+<script src="logo-white-data.js"></script>
+<script src="coshh-library.js"></script>
+<script src="ppe-library.js"></script>
+<script src="competence-library.js"></script>
+<script src="task-library.js"></script>
+<script src="render.js"></script>
+<script>
+document.getElementById("topLogo").src = LOGO_WHITE_DATA_URI;
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtDateUK(iso){ if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+function addYearsISO(iso, years){ if(!iso) return ""; const d = new Date(iso); d.setFullYear(d.getFullYear()+years); return d.toISOString().slice(0,10); }
+function rrBandOf(score){ if(score>=15) return {label:"High",cls:"rr-high"}; if(score>=6) return {label:"Medium",cls:"rr-medium"}; return {label:"Low",cls:"rr-low"}; }
+function newHazard(){ return {hazard:"", whoAtRisk:"Operatives", controls:"", likelihood:2, severity:2}; }
+function newRiskTask(){
+  const rd = defaultReviewDates();
+  return { task:"", personAtRisk:"Operatives", reviewDate:rd.reviewDate, nextReview:rd.nextReview, hazards:[newHazard()] };
+}
+function defaultReviewDates(){
+  const iso = STATE.meta.dateOfIssue || todayISO();
+  return { reviewDate: fmtDateUK(iso), nextReview: fmtDateUK(addYearsISO(iso,1)) };
+}
+
+// ---------------------------------------------------------------
+// State
+// ---------------------------------------------------------------
+let STATE = {
+  meta: {
+    projectName:"", projectNumber:"", docNumber:"001", docTitle:"",
+    revision:"1", dateOfIssue: todayISO(),
+    preparedBy:"John Homes", preparedByPhone:"07557266060",
+    otherContractors:""
+  },
+  schedule:{ startDate:"", duration:"", location:"" },
+  revisionHistory:[],
+  keyControls:[""],
+  scope:[""],
+  methodologySteps:[""],
+  personnelCount:"", onsiteSupervisor:"", personResponsibleMonitoring:"",
+  materials:[""],
+  plantEquipment:[""],
+  technicalInformation:"Not applicable.",
+  workforce:[{name:"",role:"",sssts:false,smsts:false,firstAid:false,cscs:false,phone:""}],
+  methodStatements:[],
+  riskRegister:[],
+  coshh:[],
+  manualHandling:"", handArmVibration:"", noise:"", radiation:"Not applicable — no laser setting-out required for this task.",
+  accessEgress:"", workAtHeightPersons:"", workAtHeightFalling:"",
+  wasteRemoval:"", leaksSpills:"Not applicable.",
+  permits:[{item:"Hot Works", value:"Not Applicable"},{item:"Confined Space", value:"Not Applicable"},{item:"Isolation Permits", value:"Not Applicable"},{item:"Live Working Permits", value:"Not Applicable"},{item:"Step Ladders", value:""}],
+  permitType:"", permitIssuedBy:"",
+  ppe:{ mandatory:["Safety Boots","Hard Hat","Hi-Vis Vest"], taskSpecific:[""], rpe:[""], hardHatColour:"", hiVisColour:"" },
+  securityArrangements:"As Principal Contractor requirements.",
+  trainingOfPersons:"All personnel shall have successfully undertaken the site induction. Trained, experienced and competent staff shall be employed and certificates provided to the Principal Contractor. All operatives will hold a relevant CSCS card.",
+  pedestrianTraffic:"Not applicable.",
+  fireSafety:"Not applicable. No hot works required.",
+  taskLighting:"Interior Impressions will be responsible for task lighting for their operatives.",
+  communication:"",
+  housekeeping:"", environmental:"", hsMonitoring:"",
+  emergency:{ arrangements:"", rescue:"", nearestAE:"", firstAidOnSite:"" },
+  tier2:{ required:false, reason:"" },
+  stepladderBanned:{ flagged:false, morganLovell:false },
+  complianceNotes:[]
+};
+
+// ---------------------------------------------------------------
+// Generic repeatable string-list field
+// ---------------------------------------------------------------
+function renderStringList(containerId, arrKey, placeholder, getArr, onChange){
+  const el = document.getElementById(containerId);
+  const arr = getArr ? getArr() : STATE[arrKey];
+  el.innerHTML = "";
+  arr.forEach((val, i) => {
+    const row = document.createElement("div");
+    row.style.display = "flex"; row.style.gap = "6px"; row.style.marginBottom = "6px";
+    row.innerHTML = `
+      <input type="text" value="${(val||"").replace(/"/g,'&quot;')}" placeholder="${placeholder}" style="flex:1; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px;">
+      <button type="button" class="add-btn sub" style="padding:6px 10px;">✕</button>
+    `;
+    const input = row.querySelector("input");
+    input.addEventListener("input", () => { arr[i] = input.value; renderPreview(); });
+    row.querySelector("button").addEventListener("click", () => {
+      arr.splice(i,1);
+      if (!arr.length) arr.push("");
+      renderStringList(containerId, arrKey, placeholder, getArr, onChange);
+      renderPreview();
+    });
+    el.appendChild(row);
+  });
+}
+function addStringListItem(containerId, arrKey, placeholder, getArr){
+  const arr = getArr ? getArr() : STATE[arrKey];
+  arr.push("");
+  renderStringList(containerId, arrKey, placeholder, getArr);
+}
+
+// ---------------------------------------------------------------
+// Build the form UI
+// ---------------------------------------------------------------
+const formBody = document.getElementById("formBody");
+function h(text){ return text; }
+function section(id, title, innerHtml, openDefault){
+  return `<details class="section" ${openDefault ? "open":""}><summary>${title}</summary><div class="section-inner" id="${id}">${innerHtml}</div></details>`;
+}
+
+formBody.innerHTML = `
+  <div class="repeat-item" style="background:#F1EDE3; border-color:var(--navy2);">
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold; display:block; margin-bottom:6px;">Quick-fill from a project brief or client email</label>
+    <textarea id="briefInput" placeholder="Paste the project brief, RFQ, or client email here…" style="width:100%; min-height:90px; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13px; font-family:inherit; resize:vertical;"></textarea>
+    <div style="margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button type="button" class="add-btn" id="briefDraftBtn">Auto-fill from brief</button>
+      <span class="hint" id="briefStatus" style="margin-top:0;"></span>
+    </div>
+    <p class="hint" style="margin-top:6px;">Fills project name, location, dates, workforce numbers, materials, permits and scope where mentioned in the text. Leaves everything else untouched. Review before relying on it.</p>
+  </div>
+
+  ${section("sec-meta", "1 · Project & Site", `
+    <div class="field"><label>Document Title / Task</label><input type="text" id="f-docTitle"></div>
+    <div class="row2">
+      <div class="field"><label>Project Name</label><input type="text" id="f-projectName"></div>
+      <div class="field"><label>Project / Contract Number</label><input type="text" id="f-projectNumber"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Document Number</label><input type="text" id="f-docNumber"></div>
+      <div class="field"><label>Revision Number</label><input type="text" id="f-revision"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Date of Issue</label><input type="date" id="f-dateOfIssue"></div>
+      <div class="field"><label>Prepared By</label><input type="text" id="f-preparedBy"></div>
+    </div>
+    <div class="field"><label>Prepared By — Phone</label><input type="text" id="f-preparedByPhone"></div>
+    <div class="field"><label>Other Trade Contractors / Main Contractor Contact</label><textarea id="f-otherContractors"></textarea></div>
+  `, true)}
+
+  ${section("sec-schedule", "2 · Schedule & Location", `
+    <div class="field"><label>Start Date on Project</label><input type="text" id="f-startDate"></div>
+    <div class="field"><label>Expected Duration</label><textarea id="f-duration"></textarea></div>
+    <div class="field"><label>Exact Location(s)</label><input type="text" id="f-location"></div>
+  `)}
+
+  ${section("sec-workforce", "3 · Workforce, Site Details & Training", `
+    <div class="row2">
+      <div class="field"><label>No. of Personnel</label><input type="text" id="f-personnelCount" placeholder="e.g. 6-8"></div>
+      <div class="field"><label>Onsite Supervisor (Contact)</label><input type="text" id="f-onsiteSupervisor" placeholder="Name - phone"></div>
+    </div>
+    <div class="field"><label>Person Responsible for Monitoring/Review</label><input type="text" id="f-personResponsibleMonitoring"></div>
+    <div class="field"><label>Training of Persons Involved</label><textarea id="f-trainingOfPersons"></textarea></div>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">People on this job</label>
+    <div id="workforceList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn" id="addWorkforce">+ Add Person</button>
+  `)}
+
+  ${section("sec-scope", "4 · Scope of Work & Methodology", `
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Scope bullets</label>
+    <div id="scopeList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn sub" id="addScope">+ Add bullet</button>
+    <div style="height:14px;"></div>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Methodology steps (in order)</label>
+    <div id="methodList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn sub" id="addMethod">+ Add step</button>
+  `)}
+
+  ${section("sec-key-controls", "5 · Key Controls Summary", `
+    <div id="keyControlsList"></div>
+    <button type="button" class="add-btn sub" id="addKeyControl">+ Add control</button>
+  `)}
+
+  ${section("sec-materials", "6 · Materials, Plant & Technical Info", `
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Materials</label>
+    <div id="materialsList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn sub" id="addMaterial">+ Add material</button>
+    <div style="height:14px;"></div>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Plant / Equipment / Tools</label>
+    <div id="plantList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn sub" id="addPlant">+ Add item</button>
+    <div class="field" style="margin-top:14px;"><label>Technical Information</label><textarea id="f-technicalInformation"></textarea></div>
+  `)}
+
+  ${section("sec-ppe", "7 · PPE / RPE (three-tier, standards library)", `
+    <p class="hint" style="margin-top:0;">Pick from the Overbury/Morgan Lovell PPE standard (auto-fills the BS/EN citation) or add a custom item.</p>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Mandatory Site PPE</label>
+    <div class="coshh-picker" style="margin-top:6px;">
+      <select id="ppeMandatoryPicker"></select>
+      <button type="button" class="add-btn" id="ppeMandatoryAddBtn">Add</button>
+    </div>
+    <input type="text" id="ppeMandatoryCustomInput" placeholder="Or type a custom item..." style="width:100%; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px; margin-bottom:8px;">
+    <div id="ppeMandatoryList"></div>
+    <div style="height:14px;"></div>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Task-Specific PPE</label>
+    <div class="coshh-picker" style="margin-top:6px;">
+      <select id="ppeTaskPicker"></select>
+      <button type="button" class="add-btn" id="ppeTaskAddBtn">Add</button>
+    </div>
+    <input type="text" id="ppeTaskCustomInput" placeholder="Or type a custom item..." style="width:100%; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px; margin-bottom:8px;">
+    <div id="ppeTaskList"></div>
+    <div style="height:14px;"></div>
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Respiratory Protection (RPE)</label>
+    <div class="coshh-picker" style="margin-top:6px;">
+      <select id="ppeRpePicker"></select>
+      <button type="button" class="add-btn" id="ppeRpeAddBtn">Add</button>
+    </div>
+    <input type="text" id="ppeRpeCustomInput" placeholder="Or type a custom item..." style="width:100%; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13.5px; margin-bottom:8px;">
+    <div id="ppeRpeList"></div>
+    <div style="height:14px;"></div>
+    <div class="row2">
+      <div class="field"><label>Hard Hat Colour</label>
+        <select id="f-hardHatColour"><option value="">— Not specified —</option></select>
+      </div>
+      <div class="field"><label>Hi-Vis Colour</label>
+        <select id="f-hiVisColour"><option value="">— Not specified —</option></select>
+      </div>
+    </div>
+  `)}
+
+  ${section("sec-ms", "8 · Method Statements", `
+    <p class="hint" style="margin-top:0;">Pick from the task library (auto-fills scope/steps/safety from prior Donovan Brooks RAMS) or add a blank statement.</p>
+    <div class="coshh-picker">
+      <select id="msPicker"></select>
+      <button type="button" class="add-btn" id="msAddFromLibraryBtn">Add from library</button>
+    </div>
+    <p class="hint" style="margin-top:0;">Not in the library? Describe the task and draft with AI. Review and edit before sign-off.</p>
+    <div class="coshh-picker" style="align-items:flex-start;">
+      <textarea id="msAiInput" placeholder="e.g. Installing acoustic baffles to exposed soffit" style="flex:1; min-height:38px; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13px; font-family:inherit;"></textarea>
+      <button type="button" class="add-btn" id="msAiDraftBtn">Draft with AI</button>
+    </div>
+    <p class="hint" id="msAiStatus" style="margin-top:0;"></p>
+    <div id="msList"></div>
+    <button type="button" class="add-btn" id="addMs">+ Add Blank Method Statement</button>
+  `)}
+
+  ${section("sec-risk", "9 · Risk Register — 5×5 Matrix", `
+    <p class="hint" style="margin-top:0;">Likelihood × Severity = Risk Rating (1-25). Every task automatically gets a Review Date.</p>
+    <p class="hint" style="margin-top:0;">Pick from the task library (auto-fills hazards/controls/likelihood/severity) or add a blank task.</p>
+    <div class="coshh-picker">
+      <select id="riskPicker"></select>
+      <button type="button" class="add-btn" id="riskAddFromLibraryBtn">Add from library</button>
+    </div>
+    <p class="hint" style="margin-top:0;">Not in the library? Describe the task and draft with AI. Review and edit before sign-off.</p>
+    <div class="coshh-picker" style="align-items:flex-start;">
+      <textarea id="riskAiInput" placeholder="e.g. Removing existing suspended ceiling grid over occupied office" style="flex:1; min-height:38px; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13px; font-family:inherit;"></textarea>
+      <button type="button" class="add-btn" id="riskAiDraftBtn">Draft with AI</button>
+    </div>
+    <p class="hint" id="riskAiStatus" style="margin-top:0;"></p>
+    <div id="riskList"></div>
+    <button type="button" class="add-btn" id="addRiskTask">+ Add Blank Risk Assessment Task</button>
+  `)}
+
+  ${section("sec-coshh", "10 · COSHH", `
+    <p class="hint" style="margin-top:0;">Pick from the substance library (auto-fills full SDS detail) or add a custom substance.</p>
+    <div class="coshh-picker">
+      <select id="coshhPicker"></select>
+      <button type="button" class="add-btn" id="coshhAddBtn">Add</button>
+    </div>
+    <div class="field"><input type="text" id="coshhCustomInput" placeholder="Or type a custom substance name..."></div>
+    <div id="coshhChips"></div>
+  `)}
+
+  ${section("sec-generic", "11 · Manual Handling, Noise, Access, Height", `
+    <div class="field"><label>Manual Handling</label><textarea id="f-manualHandling"></textarea></div>
+    <div class="field"><label>Hand Arm Vibration</label><textarea id="f-hav"></textarea></div>
+    <div class="field"><label>Noise</label><textarea id="f-noise"></textarea></div>
+    <div class="field"><label>Radiation / Lasers</label><textarea id="f-radiation"></textarea></div>
+    <div class="field"><label>Access / Egress</label><textarea id="f-access"></textarea></div>
+    <div class="field"><label>Work at Height — Persons</label><textarea id="f-waheight-p"></textarea></div>
+    <div class="field"><label>Work at Height — Falling Object Prevention</label><textarea id="f-waheight-f"></textarea></div>
+  `)}
+
+  ${section("sec-waste", "12 · Waste, Housekeeping & Spills", `
+    <div class="field"><label>Waste Removal</label><textarea id="f-wasteRemoval"></textarea></div>
+    <div class="field"><label>Housekeeping / Storage</label><textarea id="f-housekeeping"></textarea></div>
+    <div class="field"><label>Prevention of Leaks &amp; Spills</label><textarea id="f-leaksSpills"></textarea></div>
+  `)}
+
+  ${section("sec-permits", "13 · Permits, Security & Site Arrangements", `
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Permits Required</label>
+    <div id="permitsList" style="margin-top:6px;"></div>
+    <button type="button" class="add-btn sub" id="addPermit">+ Add permit</button>
+    <div class="row2" style="margin-top:12px;">
+      <div class="field"><label>Permit Type</label><input type="text" id="f-permitType"></div>
+      <div class="field"><label>Issued By</label><input type="text" id="f-permitIssuedBy"></div>
+    </div>
+    <div class="field"><label>Security Arrangements</label><textarea id="f-securityArrangements"></textarea></div>
+    <div class="field"><label>Pedestrian / Traffic Rerouting</label><textarea id="f-pedestrianTraffic"></textarea></div>
+    <div class="field"><label>Fire Safety Arrangements</label><textarea id="f-fireSafety"></textarea></div>
+    <div class="field"><label>Responsibility for Task Lighting</label><textarea id="f-taskLighting"></textarea></div>
+  `)}
+
+  ${section("sec-other", "14 · Communication, Environmental, Monitoring", `
+    <div class="field"><label>Workforce Communication (briefing/TBTs, incl. non-English operatives)</label><textarea id="f-communication"></textarea></div>
+    <div class="field"><label>Environmental Considerations</label><textarea id="f-environmental"></textarea></div>
+    <div class="field"><label>Health &amp; Safety Monitoring</label><textarea id="f-hsMonitoring"></textarea></div>
+  `)}
+
+  ${section("sec-emergency", "15 · Emergency Arrangements & Rescue", `
+    <div class="field"><label>Emergency Arrangements</label><textarea id="f-emArrangements"></textarea></div>
+    <div class="field"><label>Rescue Plan</label><textarea id="f-emRescue"></textarea></div>
+    <div class="field"><label>Nearest A&amp;E</label><input type="text" id="f-emNearestAE"></div>
+    <div class="field"><label>First Aid on Site</label><input type="text" id="f-emFirstAid"></div>
+  `)}
+`;
+
+// ---------------------------------------------------------------
+// Bind simple fields
+// ---------------------------------------------------------------
+function bind(id, obj, key){
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => { obj[key] = el.value; renderPreview(); });
+}
+function setVal(id, val){ document.getElementById(id).value = val || ""; }
+
+function syncFormFromState(){
+  setVal("f-docTitle", STATE.meta.docTitle);
+  setVal("f-projectName", STATE.meta.projectName);
+  setVal("f-projectNumber", STATE.meta.projectNumber);
+  setVal("f-docNumber", STATE.meta.docNumber);
+  setVal("f-revision", STATE.meta.revision);
+  setVal("f-dateOfIssue", STATE.meta.dateOfIssue);
+  setVal("f-preparedBy", STATE.meta.preparedBy);
+  setVal("f-preparedByPhone", STATE.meta.preparedByPhone);
+  setVal("f-otherContractors", STATE.meta.otherContractors);
+  setVal("f-startDate", STATE.schedule.startDate);
+  setVal("f-duration", STATE.schedule.duration);
+  setVal("f-location", STATE.schedule.location);
+  setVal("f-personnelCount", STATE.personnelCount);
+  setVal("f-onsiteSupervisor", STATE.onsiteSupervisor);
+  setVal("f-personResponsibleMonitoring", STATE.personResponsibleMonitoring);
+  setVal("f-trainingOfPersons", STATE.trainingOfPersons);
+  setVal("f-technicalInformation", STATE.technicalInformation);
+  setVal("f-manualHandling", STATE.manualHandling);
+  setVal("f-hav", STATE.handArmVibration);
+  setVal("f-noise", STATE.noise);
+  setVal("f-radiation", STATE.radiation);
+  setVal("f-access", STATE.accessEgress);
+  setVal("f-waheight-p", STATE.workAtHeightPersons);
+  setVal("f-waheight-f", STATE.workAtHeightFalling);
+  setVal("f-wasteRemoval", STATE.wasteRemoval);
+  setVal("f-housekeeping", STATE.housekeeping);
+  setVal("f-leaksSpills", STATE.leaksSpills);
+  setVal("f-permitType", STATE.permitType);
+  setVal("f-permitIssuedBy", STATE.permitIssuedBy);
+  setVal("f-securityArrangements", STATE.securityArrangements);
+  setVal("f-pedestrianTraffic", STATE.pedestrianTraffic);
+  setVal("f-fireSafety", STATE.fireSafety);
+  setVal("f-taskLighting", STATE.taskLighting);
+  setVal("f-communication", STATE.communication);
+  setVal("f-environmental", STATE.environmental);
+  setVal("f-hsMonitoring", STATE.hsMonitoring);
+  setVal("f-emArrangements", STATE.emergency.arrangements);
+  setVal("f-emRescue", STATE.emergency.rescue);
+  setVal("f-emNearestAE", STATE.emergency.nearestAE);
+  setVal("f-emFirstAid", STATE.emergency.firstAidOnSite);
+
+  renderStringList("scopeList", "scope", "Scope bullet");
+  renderStringList("methodList", "methodologySteps", "Methodology step");
+  renderStringList("keyControlsList", "keyControls", "Key control");
+  renderStringList("materialsList", "materials", "Material");
+  renderStringList("plantList", "plantEquipment", "Plant / equipment item");
+  renderPpeChips("ppeMandatoryList", "mandatory");
+  renderPpeChips("ppeTaskList", "taskSpecific");
+  renderPpeChips("ppeRpeList", "rpe");
+  setVal("f-hardHatColour", STATE.ppe.hardHatColour);
+  setVal("f-hiVisColour", STATE.ppe.hiVisColour);
+  renderWorkforce();
+  renderPermitsForm();
+  renderMethodStatementsForm();
+  renderRiskTasks();
+  renderCoshhChips();
+}
+
+[["f-docTitle","meta","docTitle"],["f-projectName","meta","projectName"],["f-projectNumber","meta","projectNumber"],
+ ["f-docNumber","meta","docNumber"],["f-revision","meta","revision"],["f-dateOfIssue","meta","dateOfIssue"],
+ ["f-preparedBy","meta","preparedBy"],["f-preparedByPhone","meta","preparedByPhone"],["f-otherContractors","meta","otherContractors"]
+].forEach(([id,obj,key]) => bind(id, STATE[obj], key));
+
+[["f-startDate","schedule","startDate"],["f-duration","schedule","duration"],["f-location","schedule","location"]
+].forEach(([id,obj,key]) => bind(id, STATE[obj], key));
+
+[["f-personnelCount","personnelCount"],["f-onsiteSupervisor","onsiteSupervisor"],["f-personResponsibleMonitoring","personResponsibleMonitoring"],
+ ["f-trainingOfPersons","trainingOfPersons"],["f-technicalInformation","technicalInformation"],
+ ["f-manualHandling","manualHandling"],["f-hav","handArmVibration"],["f-noise","noise"],["f-radiation","radiation"],
+ ["f-access","accessEgress"],["f-waheight-p","workAtHeightPersons"],["f-waheight-f","workAtHeightFalling"],
+ ["f-wasteRemoval","wasteRemoval"],["f-housekeeping","housekeeping"],["f-leaksSpills","leaksSpills"],
+ ["f-permitType","permitType"],["f-permitIssuedBy","permitIssuedBy"],["f-securityArrangements","securityArrangements"],
+ ["f-pedestrianTraffic","pedestrianTraffic"],["f-fireSafety","fireSafety"],["f-taskLighting","taskLighting"],
+ ["f-communication","communication"],["f-environmental","environmental"],["f-hsMonitoring","hsMonitoring"]
+].forEach(([id,key]) => bind(id, STATE, key));
+
+[["f-emArrangements","arrangements"],["f-emRescue","rescue"],["f-emNearestAE","nearestAE"],["f-emFirstAid","firstAidOnSite"]
+].forEach(([id,key]) => bind(id, STATE.emergency, key));
+
+document.getElementById("addScope").addEventListener("click", () => addStringListItem("scopeList","scope","Scope bullet"));
+document.getElementById("addMethod").addEventListener("click", () => addStringListItem("methodList","methodologySteps","Methodology step"));
+document.getElementById("addKeyControl").addEventListener("click", () => addStringListItem("keyControlsList","keyControls","Key control"));
+document.getElementById("addMaterial").addEventListener("click", () => addStringListItem("materialsList","materials","Material"));
+document.getElementById("addPlant").addEventListener("click", () => addStringListItem("plantList","plantEquipment","Plant / equipment item"));
+
+// ---------------------------------------------------------------
+// Workforce
+// ---------------------------------------------------------------
+function renderWorkforce(){
+  const el = document.getElementById("workforceList");
+  el.innerHTML = "";
+  STATE.workforce.forEach((w,i) => {
+    const div = document.createElement("div");
+    div.className = "repeat-item";
+    div.innerHTML = `
+      <button type="button" class="rm">✕</button>
+      <div class="row2">
+        <div class="field"><label>Name</label><input type="text" value="${w.name}" data-k="name"></div>
+        <div class="field"><label>Role</label><input type="text" value="${w.role}" data-k="role" placeholder="e.g. Site Supervisor"></div>
+      </div>
+      <div class="field"><label>Phone</label><input type="text" value="${w.phone}" data-k="phone"></div>
+      <div class="checkline"><input type="checkbox" ${w.sssts?"checked":""} data-k="sssts"> SSSTS</div>
+      <div class="checkline"><input type="checkbox" ${w.smsts?"checked":""} data-k="smsts"> SMSTS</div>
+      <div class="checkline"><input type="checkbox" ${w.firstAid?"checked":""} data-k="firstAid"> First Aider</div>
+      <div class="checkline"><input type="checkbox" ${w.cscs?"checked":""} data-k="cscs"> CSCS Card Holder</div>
+    `;
+    div.querySelectorAll("[data-k]").forEach(inp => {
+      const k = inp.dataset.k;
+      const evt = inp.type === "checkbox" ? "change" : "input";
+      inp.addEventListener(evt, () => { STATE.workforce[i][k] = inp.type === "checkbox" ? inp.checked : inp.value; renderPreview(); });
+    });
+    div.querySelector(".rm").addEventListener("click", () => {
+      STATE.workforce.splice(i,1);
+      if (!STATE.workforce.length) STATE.workforce.push({name:"",role:"",sssts:false,smsts:false,firstAid:false,cscs:false,phone:""});
+      renderWorkforce(); renderPreview();
+    });
+    el.appendChild(div);
+  });
+}
+document.getElementById("addWorkforce").addEventListener("click", () => {
+  STATE.workforce.push({name:"",role:"",sssts:false,smsts:false,firstAid:false,cscs:false,phone:""});
+  renderWorkforce();
+});
+
+// ---------------------------------------------------------------
+// Permits
+// ---------------------------------------------------------------
+function renderPermitsForm(){
+  const el = document.getElementById("permitsList");
+  el.innerHTML = "";
+  STATE.permits.forEach((p,i) => {
+    const div = document.createElement("div");
+    div.className = "repeat-item";
+    div.innerHTML = `
+      <button type="button" class="rm">✕</button>
+      <div class="row2">
+        <div class="field"><label>Item</label><input type="text" value="${p.item}" data-k="item"></div>
+        <div class="field"><label>Status / Detail</label><input type="text" value="${p.value}" data-k="value"></div>
+      </div>
+    `;
+    div.querySelectorAll("[data-k]").forEach(inp => {
+      inp.addEventListener("input", () => { STATE.permits[i][inp.dataset.k] = inp.value; renderPreview(); });
+    });
+    div.querySelector(".rm").addEventListener("click", () => { STATE.permits.splice(i,1); renderPermitsForm(); renderPreview(); });
+    el.appendChild(div);
+  });
+}
+document.getElementById("addPermit").addEventListener("click", () => { STATE.permits.push({item:"", value:""}); renderPermitsForm(); });
+
+// ---------------------------------------------------------------
+// Method Statements
+// ---------------------------------------------------------------
+function renderMethodStatementsForm(){
+  const el = document.getElementById("msList");
+  el.innerHTML = "";
+  STATE.methodStatements.forEach((m,i) => {
+    const div = document.createElement("div");
+    div.className = "repeat-item";
+    div.innerHTML = `
+      <button type="button" class="rm">✕</button>
+      <div class="field"><label>Title</label><input type="text" value="${m.title}" data-k="title"></div>
+      <div class="field"><label>1. Scope of Work</label><textarea data-k="scope">${m.scope||""}</textarea></div>
+      <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">2. Method steps</label>
+      <div class="ms-steps" data-idx="${i}" style="margin:6px 0;"></div>
+      <button type="button" class="add-btn sub ms-add-step" data-idx="${i}">+ Add step</button>
+      <div style="height:8px;"></div>
+      <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">3. Safety &amp; Compliance</label>
+      <div class="ms-safety" data-idx="${i}" style="margin:6px 0;"></div>
+      <button type="button" class="add-btn sub ms-add-safety" data-idx="${i}">+ Add point</button>
+    `;
+    div.querySelectorAll("[data-k]").forEach(inp => {
+      inp.addEventListener("input", () => { STATE.methodStatements[i][inp.dataset.k] = inp.value; renderPreview(); });
+    });
+    div.querySelector(".rm").addEventListener("click", () => { STATE.methodStatements.splice(i,1); renderMethodStatementsForm(); renderPreview(); });
+    el.appendChild(div);
+    renderMsSubList(i, "steps", div.querySelector(".ms-steps"));
+    renderMsSubList(i, "safety", div.querySelector(".ms-safety"));
+    div.querySelector(".ms-add-step").addEventListener("click", () => {
+      if(!STATE.methodStatements[i].steps) STATE.methodStatements[i].steps = [];
+      STATE.methodStatements[i].steps.push("");
+      renderMsSubList(i, "steps", div.querySelector(".ms-steps"));
+    });
+    div.querySelector(".ms-add-safety").addEventListener("click", () => {
+      if(!STATE.methodStatements[i].safety) STATE.methodStatements[i].safety = [];
+      STATE.methodStatements[i].safety.push("");
+      renderMsSubList(i, "safety", div.querySelector(".ms-safety"));
+    });
+  });
+}
+function renderMsSubList(msIndex, key, container){
+  const arr = STATE.methodStatements[msIndex][key] || [];
+  container.innerHTML = "";
+  arr.forEach((val, j) => {
+    const row = document.createElement("div");
+    row.style.display = "flex"; row.style.gap = "6px"; row.style.marginBottom = "5px";
+    row.innerHTML = `<input type="text" value="${val.replace(/"/g,'&quot;')}" style="flex:1; padding:6px; border:1px solid #D3CDBD; border-radius:4px; font-size:13px;">
+      <button type="button" class="add-btn sub" style="padding:5px 9px;">✕</button>`;
+    row.querySelector("input").addEventListener("input", (e) => { STATE.methodStatements[msIndex][key][j] = e.target.value; renderPreview(); });
+    row.querySelector("button").addEventListener("click", () => { STATE.methodStatements[msIndex][key].splice(j,1); renderMsSubList(msIndex, key, container); renderPreview(); });
+    container.appendChild(row);
+  });
+}
+document.getElementById("addMs").addEventListener("click", () => { STATE.methodStatements.push({title:"", scope:"", steps:[""], safety:[""]}); renderMethodStatementsForm(); });
+
+// Method statement library picker
+const msPicker = document.getElementById("msPicker");
+const msNames = Object.keys(METHOD_STATEMENT_LIBRARY).sort();
+msPicker.innerHTML = `<option value="">Select a method statement…</option>` + msNames.map(n => `<option value="${n}">${n}</option>`).join("");
+document.getElementById("msAddFromLibraryBtn").addEventListener("click", () => {
+  const picked = msPicker.value;
+  if (!picked) return;
+  const entry = METHOD_STATEMENT_LIBRARY[picked];
+  STATE.methodStatements.push({ title: entry.title, scope: entry.scope, steps: [...entry.steps], safety: [...entry.safety] });
+  msPicker.value = "";
+  renderMethodStatementsForm();
+  renderPreview();
+});
+
+// ---------------------------------------------------------------
+// AI draft helper — calls the Netlify function, shared by
+// Method Statement and Risk Assessment "Draft with AI" buttons.
+// Draft is added to the list exactly like a library item; nothing
+// is auto signed-off, it's editable text like everything else.
+// ---------------------------------------------------------------
+function isMorganLovellProject(){
+  return /morgan lovell|\bml\b/.test(((STATE.meta.projectName||"") + " " + (STATE.meta.otherContractors||"")).toLowerCase());
+}
+async function requestAiDraft(type, taskDescription, statusEl){
+  statusEl.textContent = "Drafting…";
+  statusEl.style.color = "";
+  try{
+    const res = await fetch("/.netlify/functions/draft-rams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        type,
+        taskDescription,
+        projectName: STATE.meta.projectName || "",
+        isMorganLovell: isMorganLovellProject()
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    statusEl.textContent = "Draft added below — review and edit before sign-off.";
+    return data.draft;
+  } catch(e){
+    statusEl.textContent = "AI draft failed: " + e.message;
+    statusEl.style.color = "#9B1C1C";
+    return null;
+  }
+}
+document.getElementById("msAiDraftBtn").addEventListener("click", async () => {
+  const input = document.getElementById("msAiInput");
+  const statusEl = document.getElementById("msAiStatus");
+  const desc = input.value.trim();
+  if (!desc) { statusEl.textContent = "Describe the task first."; statusEl.style.color = "#9B1C1C"; return; }
+  const btn = document.getElementById("msAiDraftBtn");
+  btn.disabled = true;
+  const draft = await requestAiDraft("method-statement", desc, statusEl);
+  btn.disabled = false;
+  if (!draft) return;
+  STATE.methodStatements.push({ title: draft.title, scope: draft.scope, steps: [...(draft.steps||[])], safety: [...(draft.safety||[])] });
+  input.value = "";
+  renderMethodStatementsForm();
+  renderPreview();
+});
+
+// ---------------------------------------------------------------
+// Risk Register — 5x5 matrix
+// ---------------------------------------------------------------
+function renderRiskTasks(){
+  const el = document.getElementById("riskList");
+  el.innerHTML = "";
+  STATE.riskRegister.forEach((t,i) => {
+    const div = document.createElement("div");
+    div.className = "repeat-item";
+    div.innerHTML = `
+      <button type="button" class="rm">✕</button>
+      <div class="field"><label>Task Name</label><input type="text" value="${t.task}" data-k="task"></div>
+      <div class="field"><label>Person at Risk</label><input type="text" value="${t.personAtRisk}" data-k="personAtRisk"></div>
+      <div class="row2">
+        <div class="field"><label>Review Date</label><input type="text" value="${t.reviewDate}" data-k="reviewDate"></div>
+        <div class="field"><label>Next Review</label><input type="text" value="${t.nextReview}" data-k="nextReview"></div>
+      </div>
+      <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Hazards</label>
+      <div class="hazards" data-idx="${i}" style="margin-top:6px;"></div>
+      <button type="button" class="add-btn sub add-hazard" data-idx="${i}">+ Add hazard</button>
+    `;
+    div.querySelectorAll("[data-k]").forEach(inp => {
+      inp.addEventListener("input", () => { STATE.riskRegister[i][inp.dataset.k] = inp.value; renderPreview(); });
+    });
+    div.querySelector(".rm").addEventListener("click", () => { STATE.riskRegister.splice(i,1); renderRiskTasks(); renderPreview(); });
+    el.appendChild(div);
+    renderHazards(i, div.querySelector(".hazards"));
+    div.querySelector(".add-hazard").addEventListener("click", () => {
+      STATE.riskRegister[i].hazards.push(newHazard());
+      renderHazards(i, div.querySelector(".hazards"));
+      renderPreview();
+    });
+  });
+}
+function likSevOptions(selected){
+  return [1,2,3,4,5].map(n => `<option value="${n}" ${Number(selected)===n?"selected":""}>${n}</option>`).join("");
+}
+function renderHazards(taskIndex, container){
+  const hazards = STATE.riskRegister[taskIndex].hazards;
+  container.innerHTML = "";
+  hazards.forEach((hz,j) => {
+    const row = document.createElement("div");
+    row.className = "hazard-row";
+    const score = (Number(hz.likelihood)||1) * (Number(hz.severity)||1);
+    const band = rrBandOf(score);
+    row.innerHTML = `
+      <div class="field"><label>Hazard</label><input type="text" value="${hz.hazard}" data-k="hazard"></div>
+      <div class="field"><label>Who Might Be Harmed</label><input type="text" value="${hz.whoAtRisk}" data-k="whoAtRisk"></div>
+      <div class="row2">
+        <div class="field"><label>Likelihood (1-5)</label><select data-k="likelihood">${likSevOptions(hz.likelihood)}</select></div>
+        <div class="field"><label>Severity (1-5)</label><select data-k="severity">${likSevOptions(hz.severity)}</select></div>
+      </div>
+      <div class="rr-preview ${band.cls}" data-role="rr-preview">Risk Rating: ${score} (${band.label})</div>
+      <div class="field" style="margin-top:8px;"><label>Existing Controls</label><textarea data-k="controls">${hz.controls||""}</textarea></div>
+      <button type="button" class="add-btn sub rm-hazard" style="margin-bottom:4px;">Remove hazard</button>
+    `;
+    row.querySelectorAll("[data-k]").forEach(inp => {
+      const evt = inp.tagName === "SELECT" ? "change" : "input";
+      inp.addEventListener(evt, () => {
+        hazards[j][inp.dataset.k] = inp.value;
+        const s = (Number(hazards[j].likelihood)||1) * (Number(hazards[j].severity)||1);
+        const b = rrBandOf(s);
+        const preview = row.querySelector('[data-role="rr-preview"]');
+        preview.className = `rr-preview ${b.cls}`;
+        preview.textContent = `Risk Rating: ${s} (${b.label})`;
+        renderPreview();
+      });
+    });
+    row.querySelector(".rm-hazard").addEventListener("click", () => { hazards.splice(j,1); renderHazards(taskIndex, container); renderPreview(); });
+    container.appendChild(row);
+  });
+}
+document.getElementById("addRiskTask").addEventListener("click", () => { STATE.riskRegister.push(newRiskTask()); renderRiskTasks(); });
+
+// Risk register library picker
+const riskPicker = document.getElementById("riskPicker");
+const riskNames = Object.keys(RISK_ASSESSMENT_LIBRARY).sort();
+riskPicker.innerHTML = `<option value="">Select a risk assessment task…</option>` + riskNames.map(n => `<option value="${n}">${n}</option>`).join("");
+document.getElementById("riskAddFromLibraryBtn").addEventListener("click", () => {
+  const picked = riskPicker.value;
+  if (!picked) return;
+  const entry = RISK_ASSESSMENT_LIBRARY[picked];
+  const rd = defaultReviewDates();
+  STATE.riskRegister.push({
+    task: entry.task,
+    personAtRisk: entry.personAtRisk,
+    reviewDate: rd.reviewDate,
+    nextReview: rd.nextReview,
+    hazards: entry.hazards.map(h => ({ ...h }))
+  });
+  riskPicker.value = "";
+  renderRiskTasks();
+  renderPreview();
+});
+
+// ---------------------------------------------------------------
+// AI quick-fill from a pasted project brief / client email
+// Fills project details, workforce numbers, materials, permits and
+// scope where the AI actually found them in the text — never blanks
+// out a field you've already typed, and never invents figures that
+// weren't in the source text (enforced in the function's prompt).
+// ---------------------------------------------------------------
+function fillIfPresent(obj, key, val){
+  if (val !== undefined && val !== null && String(val).trim() !== "") obj[key] = val;
+}
+function applyBriefDraft(d){
+  if (!d) return;
+  fillIfPresent(STATE.meta, "docTitle", d.docTitle);
+  fillIfPresent(STATE.meta, "projectName", d.projectName);
+  fillIfPresent(STATE.meta, "projectNumber", d.projectNumber);
+  fillIfPresent(STATE.meta, "otherContractors", d.otherContractors);
+  fillIfPresent(STATE.schedule, "location", d.location);
+  fillIfPresent(STATE.schedule, "startDate", d.startDate);
+  fillIfPresent(STATE.schedule, "duration", d.duration);
+  fillIfPresent(STATE, "personnelCount", d.personnelCount);
+  fillIfPresent(STATE, "onsiteSupervisor", d.onsiteSupervisor);
+  if (Array.isArray(d.scope) && d.scope.length) STATE.scope = d.scope;
+  if (Array.isArray(d.materials) && d.materials.length) STATE.materials = d.materials;
+  if (Array.isArray(d.plantEquipment) && d.plantEquipment.length) STATE.plantEquipment = d.plantEquipment;
+  if (Array.isArray(d.permits) && d.permits.length) STATE.permits = STATE.permits.concat(d.permits);
+  syncFormFromState();
+  renderPreview();
+}
+document.getElementById("briefDraftBtn").addEventListener("click", async () => {
+  const input = document.getElementById("briefInput");
+  const statusEl = document.getElementById("briefStatus");
+  const text = input.value.trim();
+  if (!text) { statusEl.textContent = "Paste some brief text first."; statusEl.style.color = "#9B1C1C"; return; }
+  const btn = document.getElementById("briefDraftBtn");
+  btn.disabled = true;
+  statusEl.textContent = "Reading brief…";
+  statusEl.style.color = "";
+  try {
+    const res = await fetch("/.netlify/functions/draft-rams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "project-brief", taskDescription: text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    applyBriefDraft(data.draft);
+    statusEl.textContent = "Fields filled in below, review before relying on it.";
+  } catch (e) {
+    statusEl.textContent = "Auto-fill failed: " + e.message;
+    statusEl.style.color = "#9B1C1C";
+  }
+  btn.disabled = false;
+});
+
+document.getElementById("riskAiDraftBtn").addEventListener("click", async () => {
+  const input = document.getElementById("riskAiInput");
+  const statusEl = document.getElementById("riskAiStatus");
+  const desc = input.value.trim();
+  if (!desc) { statusEl.textContent = "Describe the task first."; statusEl.style.color = "#9B1C1C"; return; }
+  const btn = document.getElementById("riskAiDraftBtn");
+  btn.disabled = true;
+  const draft = await requestAiDraft("risk-assessment", desc, statusEl);
+  btn.disabled = false;
+  if (!draft) return;
+  const rd = defaultReviewDates();
+  STATE.riskRegister.push({
+    task: draft.task,
+    personAtRisk: draft.personAtRisk,
+    reviewDate: rd.reviewDate,
+    nextReview: rd.nextReview,
+    hazards: (draft.hazards||[]).map(h => ({ ...h }))
+  });
+  input.value = "";
+  renderRiskTasks();
+  renderPreview();
+});
+
+// ---------------------------------------------------------------
+// COSHH — library-aware picker
+// ---------------------------------------------------------------
+const coshhPicker = document.getElementById("coshhPicker");
+const coshhNames = Object.keys(COSHH_LIBRARY).sort();
+coshhPicker.innerHTML = `<option value="">Select a substance…</option>` + coshhNames.map(n => `<option value="${n}">${n}</option>`).join("");
+
+function renderCoshhChips(){
+  const el = document.getElementById("coshhChips");
+  el.innerHTML = "";
+  STATE.coshh.forEach((name, i) => {
+    const chip = document.createElement("span");
+    chip.className = "coshh-chip";
+    chip.innerHTML = `${name.replace(/</g,"&lt;")} <button type="button">✕</button>`;
+    chip.querySelector("button").addEventListener("click", () => { STATE.coshh.splice(i,1); renderCoshhChips(); renderPreview(); });
+    el.appendChild(chip);
+  });
+}
+document.getElementById("coshhAddBtn").addEventListener("click", () => {
+  const custom = document.getElementById("coshhCustomInput").value.trim();
+  const picked = coshhPicker.value;
+  const name = custom || picked;
+  if (!name) return;
+  if (!STATE.coshh.includes(name)) STATE.coshh.push(name);
+  coshhPicker.value = "";
+  document.getElementById("coshhCustomInput").value = "";
+  renderCoshhChips();
+  renderPreview();
+});
+
+// ---------------------------------------------------------------
+// PPE — library-aware pickers (Mandatory / Task-Specific / RPE)
+// ---------------------------------------------------------------
+function fillPpePicker(selectId, libraryArr){
+  const el = document.getElementById(selectId);
+  el.innerHTML = `<option value="">Select from standard…</option>` +
+    libraryArr.map(o => `<option value="${o.label.replace(/"/g,'&quot;')}" data-standard="${(o.standard||"").replace(/"/g,'&quot;')}">${o.label}${o.standard ? " — " + o.standard : ""}</option>`).join("");
+}
+fillPpePicker("ppeMandatoryPicker", PPE_MANDATORY_BASELINE);
+fillPpePicker("ppeTaskPicker", PPE_TASK_SPECIFIC_OPTIONS);
+fillPpePicker("ppeRpePicker", PPE_RPE_OPTIONS);
+
+function renderPpeChips(containerId, tier){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  STATE.ppe[tier].filter(x => x && x.trim()).forEach((name, i) => {
+    const chip = document.createElement("span");
+    chip.className = "coshh-chip";
+    chip.innerHTML = `${name.replace(/</g,"&lt;")} <button type="button">✕</button>`;
+    chip.querySelector("button").addEventListener("click", () => {
+      const idx = STATE.ppe[tier].indexOf(name);
+      if (idx > -1) STATE.ppe[tier].splice(idx,1);
+      if (!STATE.ppe[tier].length) STATE.ppe[tier].push("");
+      renderPpeChips(containerId, tier);
+      renderPreview();
+    });
+    el.appendChild(chip);
+  });
+}
+function wirePpeAdd(pickerId, customInputId, addBtnId, containerId, tier){
+  document.getElementById(addBtnId).addEventListener("click", () => {
+    const picker = document.getElementById(pickerId);
+    const custom = document.getElementById(customInputId).value.trim();
+    let name = custom;
+    if (!name && picker.value) {
+      const opt = picker.options[picker.selectedIndex];
+      const standard = opt.dataset.standard;
+      name = standard ? `${picker.value} — ${standard}` : picker.value;
+    }
+    if (!name) return;
+    STATE.ppe[tier] = STATE.ppe[tier].filter(x => x && x.trim());
+    STATE.ppe[tier].push(name);
+    picker.value = "";
+    document.getElementById(customInputId).value = "";
+    renderPpeChips(containerId, tier);
+    renderPreview();
+  });
+}
+wirePpeAdd("ppeMandatoryPicker","ppeMandatoryCustomInput","ppeMandatoryAddBtn","ppeMandatoryList","mandatory");
+wirePpeAdd("ppeTaskPicker","ppeTaskCustomInput","ppeTaskAddBtn","ppeTaskList","taskSpecific");
+wirePpeAdd("ppeRpePicker","ppeRpeCustomInput","ppeRpeAddBtn","ppeRpeList","rpe");
+
+function fillColourPicker(selectId, libraryObj, stateKey){
+  const el = document.getElementById(selectId);
+  Object.keys(libraryObj).forEach(colour => {
+    const opt = document.createElement("option");
+    opt.value = colour;
+    opt.textContent = `${colour} — ${libraryObj[colour]}`;
+    el.appendChild(opt);
+  });
+  el.addEventListener("change", () => { STATE.ppe[stateKey] = el.value; renderPreview(); });
+}
+fillColourPicker("f-hardHatColour", PPE_HARD_HAT_COLOURS, "hardHatColour");
+fillColourPicker("f-hiVisColour", PPE_HIVIS_COLOURS, "hiVisColour");
+
+// ---------------------------------------------------------------
+// Preview
+// ---------------------------------------------------------------
+function buildDocData(){
+  const data = JSON.parse(JSON.stringify(STATE));
+  data.meta.dateOfIssue = fmtDateUK(STATE.meta.dateOfIssue);
+  if (!data.revisionHistory.length){
+    data.revisionHistory = [{ status: "1st", date: data.meta.dateOfIssue, details: "First issue." }];
+  }
+  return data;
+}
+function renderPreview(){
+  document.getElementById("docPreview").innerHTML = renderRamsDocument(buildDocData());
+  const box = document.getElementById("complianceBox");
+  if (box && box.classList.contains("show")) {
+    renderCompleteness();
+  }
+}
+syncFormFromState();
+renderPreview();
+
+// ---------------------------------------------------------------
+// Toolbar actions
+// ---------------------------------------------------------------
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+document.getElementById("shareBtn").addEventListener("click", () => {
+  const data = buildDocData();
+  const json = JSON.stringify(data);
+  const encoded = btoa(unescape(encodeURIComponent(json)));
+  const url = new URL("sign.html", window.location.href);
+  url.searchParams.set("d", encoded);
+  document.getElementById("shareLink").value = url.toString();
+  document.getElementById("shareBox").classList.add("show");
+});
+document.getElementById("copyLinkBtn").addEventListener("click", () => {
+  const input = document.getElementById("shareLink");
+  input.select();
+  navigator.clipboard && navigator.clipboard.writeText(input.value);
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  if (!confirm("Clear the whole form?")) return;
+  window.location.reload();
+});
+
+// ---------------------------------------------------------------
+// Export / Import drafts (whole-form save and reuse as a template)
+// ---------------------------------------------------------------
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const nameSafe = (STATE.meta.projectName || "RAMS-draft").trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "RAMS-draft";
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Interior Impressions - ${nameSafe} - RAMS Draft - ${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+document.getElementById("importFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      applyImportedState(data);
+      syncFormFromState();
+      renderPreview();
+      alert("Draft loaded: " + (STATE.meta.projectName || "(untitled project)"));
+    } catch (err) {
+      alert("Could not load that file, it may not be a RAMS Builder draft: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+// Mutates the existing STATE object in place (rather than replacing it)
+// so fields bound by direct object reference (meta/schedule/emergency)
+// keep working after import — see syncFormFromState/bind() above.
+function applyImportedState(data){
+  if (!data || typeof data !== "object") throw new Error("Invalid draft file.");
+  Object.assign(STATE.meta, data.meta || {});
+  Object.assign(STATE.schedule, data.schedule || {});
+  Object.assign(STATE.emergency, data.emergency || {});
+  Object.keys(STATE).forEach((k) => {
+    if (["meta", "schedule", "emergency"].includes(k)) return;
+    if (data[k] !== undefined) STATE[k] = data[k];
+  });
+}
+
+// ---------------------------------------------------------------
+// Compliance Check (Morgan Lovell Supply Chain H&S Standards 2025)
+// ---------------------------------------------------------------
+function allScopeText(){
+  return [
+    STATE.meta.docTitle,
+    ...STATE.scope, ...STATE.methodologySteps,
+    ...STATE.methodStatements.map(m => (m.title||"") + " " + (m.scope||""))
+  ].join(" ").toLowerCase();
+}
+
+function renderCompleteness(){
+  const data = buildDocData();
+  const el = document.getElementById("completenessList");
+  el.innerHTML = RAMS_REQUIRED_SECTIONS.map(s => {
+    const ok = s.check(data);
+    return `<div class="check-item ${ok?'ok':'missing'}">${ok?'✓':'✕'} ${s.label}</div>`;
+  }).join("");
+}
+
+function addComplianceNote(text){
+  if (!STATE.complianceNotes.includes(text)) STATE.complianceNotes.push(text);
+  renderPreview();
+  renderTriggers();
+}
+
+function renderTriggers(){
+  const text = allScopeText();
+  const el = document.getElementById("triggersList");
+  const cards = [];
+
+  if (/strip[\s-]?out|demolition/.test(text)) {
+    cards.push({
+      title: "Strip-out / Demolition detected",
+      body: `Morgan Lovell 2025 standard requires: mandatory eye protection (BS EN ISO 16321), and consideration of health hazards — ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`,
+      action: () => {
+        if (!STATE.ppe.taskSpecific.includes("Eye protection (mandatory for ALL strip-out activities) — BS EN ISO 16321")) {
+          STATE.ppe.taskSpecific = STATE.ppe.taskSpecific.filter(x=>x&&x.trim());
+          STATE.ppe.taskSpecific.push("Eye protection (mandatory for ALL strip-out activities) — BS EN ISO 16321");
+        }
+        addComplianceNote(`Strip-out/demolition health hazards considered per Morgan Lovell 2025 standard: ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`);
+        syncFormFromState();
+      }
+    });
+  }
+  if (/hot work|welding|brazing|soldering/.test(text) || (STATE.permits.some(p => p.item === "Hot Works" && p.value && p.value.toLowerCase().includes("yes")))) {
+    cards.push({
+      title: "Hot Works detected",
+      body: HOT_WORKS_REQUIREMENTS.join(" "),
+      action: () => {
+        addComplianceNote("Hot Works controls per Morgan Lovell 2025: " + HOT_WORKS_REQUIREMENTS.join(" "));
+        const hw = STATE.permits.find(p => p.item === "Hot Works");
+        if (hw) hw.value = "Yes — PermitPLUS, 2hr fire watch, thermal imaging camera (medium/high risk)";
+        syncFormFromState();
+      }
+    });
+  }
+  if (/temporary works?|temp works/.test(text)) {
+    cards.push({
+      title: "Temporary Works detected — Tier 2 review likely required",
+      body: "RAMS containing Temporary Works elements require a Tier 2 review involving 2 Morgan Lovell Managers.",
+      action: () => {
+        STATE.tier2.required = true;
+        STATE.tier2.reason = "Contains Temporary Works elements.";
+        renderPreview();
+        renderTriggers();
+      }
+    });
+  }
+  if (/electrical|live working/.test(text)) {
+    cards.push({
+      title: "Electrical Works detected — Tier 2 review likely required",
+      body: "RAMS containing Electrical elements require a Tier 2 review. Live working is not permitted on Morgan Lovell sites except by exceptional approval.",
+      action: () => {
+        STATE.tier2.required = true;
+        STATE.tier2.reason = "Contains Electrical Works elements.";
+        renderPreview();
+        renderTriggers();
+      }
+    });
+  }
+  if (/lifting|crane|hoist/.test(text)) {
+    cards.push({
+      title: "Lifting Operations detected — Tier 2 review likely required",
+      body: "RAMS containing lifting operations require a Tier 2 review and a lifting plan approved by an Appointed Person.",
+      action: () => {
+        STATE.tier2.required = true;
+        STATE.tier2.reason = "Contains Lifting Operations.";
+        renderPreview();
+        renderTriggers();
+      }
+    });
+  }
+  if (/excavat|dig(ging)?/.test(text)) {
+    cards.push({
+      title: "Excavation detected",
+      body: EXCAVATION_CHECKLIST.join(" "),
+      action: () => {
+        addComplianceNote("Excavation checklist per Morgan Lovell 2025: " + EXCAVATION_CHECKLIST.join(" "));
+      }
+    });
+  }
+  const plantText = STATE.plantEquipment.join(" ").toLowerCase() + " " + STATE.permits.map(p=>p.item+" "+p.value).join(" ").toLowerCase();
+  const isMorganLovell = /morgan lovell|\bml\b/.test((STATE.meta.projectName + " " + STATE.meta.otherContractors).toLowerCase());
+  if (/stepladder|step ladder|hop.?up/.test(text + " " + plantText)) {
+    cards.push({
+      title: isMorganLovell ? "⚠ Stepladders detected — BANNED on Morgan Lovell sites" : "Stepladders detected — check client policy",
+      body: isMorganLovell
+        ? "Stepladders are no longer permitted on Morgan Lovell sites, including as a last resort. Use podium/platform enclosing steps, a mobile tower, or a MEWP instead."
+        : "Confirm stepladder policy with the main contractor — Morgan Lovell sites no longer permit stepladders at all (other clients may still allow with a daily permit).",
+      danger: isMorganLovell,
+      action: () => {
+        STATE.stepladderBanned = { flagged: true, morganLovell: isMorganLovell };
+        addComplianceNote(isMorganLovell
+          ? "Stepladders are banned on Morgan Lovell sites — access method must be revised to podium steps, tower, or MEWP before this RAMS can be approved."
+          : "Stepladder use to be confirmed against main contractor's current work-at-height policy before approval.");
+        renderPreview();
+        renderTriggers();
+      }
+    });
+  }
+
+  if (!cards.length) {
+    el.innerHTML = `<p class="hint" style="margin:0;">No trigger keywords detected in scope/methodology (strip-out, hot works, temporary works, electrical, lifting, excavation).</p>`;
+    return;
+  }
+  el.innerHTML = "";
+  cards.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "trigger-card" + (c.danger ? " danger" : "");
+    div.innerHTML = `<b>${c.title}</b><p>${c.body}</p><button type="button" class="add-btn${c.danger?' danger':''}">Apply to RAMS</button>`;
+    div.querySelector("button").addEventListener("click", c.action);
+    el.appendChild(div);
+  });
+}
+
+document.getElementById("complianceBtn").addEventListener("click", () => {
+  const box = document.getElementById("complianceBox");
+  box.classList.toggle("show");
+  if (box.classList.contains("show")) {
+    renderCompleteness();
+    renderTriggers();
+  }
+});
+
+document.getElementById("loadSampleBtn").addEventListener("click", () => {
+  const iso = todayISO();
+  STATE = {
+    meta:{
+      projectName:"LaSalle — 78 St James Street, SW1A 1JB", projectNumber:"Day Work — Tetris",
+      docNumber:"001", docTitle:"Remove Access Panel & Board Up Aperture",
+      revision:"2", dateOfIssue: iso,
+      preparedBy:"John Homes", preparedByPhone:"07557266060",
+      otherContractors:"Tetris (Main Contractor) — Colin Goodman, Phil King"
+    },
+    schedule:{ startDate:"Monday 24/08/2026 (morning)", duration:"Half-day/morning visit.", location:"4th Floor, LaSalle, 78 St James Street, London SW1A 1JB" },
+    revisionHistory:[
+      {status:"1st", date:"18/08/2026", details:"First issue."},
+      {status:"2nd", date:"19/08/2026", details:"Reviewed against Tetris MS/RA Acceptance Form."}
+    ],
+    keyControls:[
+      "Step/plant access provided by Tetris to be visually inspected before use.",
+      "Work at height limited to short duration — no longer than 5 minutes per activity.",
+      "Materials and tools passed hand-to-hand from lower level — nothing thrown or dropped."
+    ],
+    scope:[
+      "Carefully remove existing 600x600mm access panel by hand, pass to floor level.",
+      "Measure aperture and cut 12.5mm plasterboard to size.",
+      "Fix support batten and plasterboard to board up aperture — filling/making good by others."
+    ],
+    methodologySteps:[
+      "Arrive via Loading Bay and sign in.",
+      "All materials and labour to access 4th floor via Goods Lift.",
+      "Complete Tetris induction before starting work.",
+      "Carefully remove access panel by hand and pass to floor level.",
+      "Cut plasterboard to size, fix batten and board in place.",
+      "Confirm with Tetris Manager and leave site via same route, signing out."
+    ],
+    personnelCount:"1", onsiteSupervisor:"Boris Ursu — 07904 872661", personResponsibleMonitoring:"John Homes (Director) — 07557266060",
+    materials:["Timber batten","Half sheet 12.5mm plasterboard","Fixings"],
+    plantEquipment:["Step/plant access (provided by Tetris)"],
+    technicalInformation:"Not applicable.",
+    workforce:[{name:"Boris Ursu (SBCom)", role:"Site Supervisor", sssts:true, smsts:false, firstAid:true, cscs:true, phone:"07904 872661"}],
+    methodStatements:[{
+      title:"Remove Access Panel & Board Up Aperture",
+      scope:"This method statement covers removal of an existing 600x600mm access panel and boarding up the resulting aperture with plasterboard on a support batten.",
+      steps:["Sign in and complete Tetris site induction.","Inspect step/plant access before use.","Remove access panel by hand, pass to floor level.","Measure and cut plasterboard to size.","Fix batten and board in place.","Confirm completion with Tetris Manager."],
+      safety:["Work at height limited to <5 min per activity.","Materials passed hand-to-hand — nothing thrown or dropped.","Eye protection and gloves worn when cutting/fixing."]
+    }],
+    riskRegister:[{
+      task:"Removing access panel and boarding up aperture (working at height)",
+      personAtRisk:"Operatives",
+      reviewDate: fmtDateUK(iso), nextReview: fmtDateUK(addYearsISO(iso,1)),
+      hazards:[
+        {hazard:"Working from step/plant access to reach ceiling-level access panel", whoAtRisk:"Operatives, Occupants", controls:"Step/plant provided and inspected by Tetris; short-duration activity (<5 min); three points of contact maintained.", likelihood:2, severity:3},
+        {hazard:"Access panel dropped or mishandled during removal", whoAtRisk:"Operatives, Occupants", controls:"Removed by hand only, passed to floor level.", likelihood:2, severity:2}
+      ]
+    }],
+    coshh:["Gyproc Jointing Materials"],
+    manualHandling:"Half sheet of 12.5mm plasterboard (approx. 10-12kg), timber batten, and the removed access panel — all within single-person safe lifting weight.",
+    handArmVibration:"Hand tools only. HAV exposure minimal.",
+    noise:"Hand tools only. Noise generation minimal and short duration.",
+    radiation:"Not applicable — no laser setting-out required for this task.",
+    accessEgress:"Access via Loading Bay (rear, Little St James Street) and Goods Lift to 4th floor, as directed by Tetris.",
+    workAtHeightPersons:"Step/plant access provided and inspected by Tetris. Work at height kept to short duration, no longer than 5 minutes per activity.",
+    workAtHeightFalling:"Tools and materials controlled while working from steps/plant; nothing set down loose above head height.",
+    wasteRemoval:"Removed access panel and offcuts bagged and removed from site via Interior Impressions Ltd's normal waste route.",
+    leaksSpills:"Not applicable.",
+    permits:[{item:"Hot Works",value:"Not Applicable"},{item:"Confined Space",value:"Not Applicable"},{item:"Isolation Permits",value:"Not Applicable"},{item:"Live Working Permits",value:"Not Applicable"},{item:"Step Ladders",value:"Yes — provided and inspected by Tetris"}],
+    permitType:"Step Ladder / Access Equipment Permit", permitIssuedBy:"Tetris Site/Duty Manager",
+    ppe:{ mandatory:["Safety helmet — BS EN 397","Protective gloves — BS EN 420","Safety footwear — BS EN ISO 20345:2022 S3","High visibility jacket or vest — BS EN 20471"], taskSpecific:["Cut-resistant gauntlets (above ceiling line)","Eye protection when cutting/drilling — BS EN 166"], rpe:["Not required for this task"], hardHatColour:"White", hiVisColour:"Yellow" },
+    securityArrangements:"As Tetris requirements.",
+    trainingOfPersons:"Boris Ursu is SSSTS qualified, holds a valid CSCS card, and is the designated First Aider for this task.",
+    pedestrianTraffic:"Not applicable.",
+    fireSafety:"Not applicable. No hot works required.",
+    taskLighting:"Interior Impressions will be responsible for task lighting for their operatives.",
+    communication:"Briefed directly to Boris by John Homes prior to attendance. Confirmed with Tetris Site Manager as part of induction.",
+    housekeeping:"Materials hand-carried to 4th floor via Goods Lift, kept at the immediate work area. Tidy-as-you-go maintained; offcuts removed from site on completion.",
+    environmental:"Waste removed from site via Interior Impressions Ltd's normal waste route. Noise and dust kept to a minimum given the occupied building.",
+    hsMonitoring:"Standards monitored via pre-use checks, supervision by Boris, and sign-off with the Tetris Manager on completion.",
+    emergency:{
+      arrangements:"In the event of a fall or injury while using the step/plant access, work stops immediately, first aid is administered, and emergency services are called if required.",
+      rescue:"No specialist rescue plan needed given short-duration, low-height step access.",
+      nearestAE:"St Thomas' Hospital, Westminster Bridge Road, London SE1 7EH.",
+      firstAidOnSite:"Boris Ursu (First Aider) on site throughout."
+    }
+  };
+  syncFormFromState();
+  renderPreview();
+});
+</script>
+</body>
+</html>
