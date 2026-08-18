@@ -1,9 +1,10 @@
 // ---------------------------------------------------------------
 // draft-rams.js — Netlify serverless function
-// Calls Claude to draft a first-pass Method Statement or Risk
-// Assessment task entry, in the exact JSON shape the RAMS Builder
-// already uses (see task-library.js). Output is a DRAFT ONLY —
-// Donovan/Scott review and edit in the app before any sign-off.
+// Calls Claude to draft a first-pass Method Statement, Risk
+// Assessment, or extract project details from a pasted brief, in
+// the exact JSON shape the RAMS Builder already uses. Output is a
+// DRAFT ONLY — Donovan/Scott review and edit in the app before any
+// sign-off.
 //
 // Requires env var ANTHROPIC_API_KEY set in Netlify site settings
 // (Site configuration > Environment variables). Never expose this
@@ -33,6 +34,38 @@ const METHOD_STATEMENT_TOOL = {
       }
     },
     required: ["title", "scope", "steps", "safety"]
+  }
+};
+
+const PROJECT_BRIEF_TOOL = {
+  name: "submit_project_brief",
+  description: "Submit project details extracted from the pasted brief/email text. Omit any field not clearly stated in the text — never guess or invent a value.",
+  input_schema: {
+    type: "object",
+    properties: {
+      docTitle: { type: "string", description: "Short document/task title, only if the text gives one." },
+      projectName: { type: "string" },
+      projectNumber: { type: "string", description: "Contract/project/job number if stated." },
+      location: { type: "string", description: "Site address or location." },
+      startDate: { type: "string", description: "As written in the text, do not reformat or guess a date not given." },
+      duration: { type: "string" },
+      otherContractors: { type: "string", description: "Main contractor / other trade contractor names and contacts mentioned." },
+      personnelCount: { type: "string", description: "Number of operatives, only if stated, e.g. '6-8'." },
+      onsiteSupervisor: { type: "string", description: "Name and/or phone if given." },
+      scope: { type: "array", items: { type: "string" }, description: "Scope of work bullet points, only what's actually described." },
+      materials: { type: "array", items: { type: "string" } },
+      plantEquipment: { type: "array", items: { type: "string" } },
+      permits: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { item: { type: "string" }, value: { type: "string" } },
+          required: ["item", "value"]
+        },
+        description: "Only permits/site arrangements explicitly mentioned (e.g. hot works, confined space, delivery restrictions)."
+      }
+    },
+    required: []
   }
 };
 
@@ -66,6 +99,8 @@ const RISK_ASSESSMENT_TOOL = {
 
 const SYSTEM_PROMPT = `You are drafting a first-pass entry for Interior Impressions Ltd, a UK commercial fit-out subcontractor (partitioning, ceilings, glass, doors, kitchen joinery). Match the house style of their existing RAMS library: concise, practical, UK English, HSE-aligned. This is a DRAFT for a SHEQ manager to review and edit before it goes into a signed-off RAMS document, so be specific and realistic rather than generic boilerplate. Likelihood and severity are each rated 1-5 (1=lowest). If the project is confirmed as a Morgan Lovell site, stepladders are banned outright, do not suggest stepladders as a control or access method for Morgan Lovell work; use podium steps, mobile tower, or MEWP instead.`;
 
+const BRIEF_SYSTEM_PROMPT = `You are extracting project details from a pasted brief, RFQ, or client email for Interior Impressions Ltd, a UK commercial fit-out subcontractor. Only include a field if it is explicitly stated or unambiguously clear in the text. Never guess, infer, or invent a project name, number, date, person's name, or figure that is not actually present in the text — omit the field entirely instead. Do not reformat dates beyond tidying obvious typos. This extraction feeds directly into a health and safety document, accuracy matters more than completeness.`;
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
@@ -87,21 +122,28 @@ exports.handler = async (event) => {
   }
 
   const { type, taskDescription, projectName, isMorganLovell } = payload;
-  if (!type || !["method-statement", "risk-assessment"].includes(type)) {
-    return { statusCode: 400, body: JSON.stringify({ error: "type must be 'method-statement' or 'risk-assessment'." }) };
+  const VALID_TYPES = ["method-statement", "risk-assessment", "project-brief"];
+  if (!type || !VALID_TYPES.includes(type)) {
+    return { statusCode: 400, body: JSON.stringify({ error: `type must be one of ${VALID_TYPES.join(", ")}.` }) };
   }
   if (!taskDescription || !taskDescription.trim()) {
     return { statusCode: 400, body: JSON.stringify({ error: "taskDescription is required." }) };
   }
 
-  const tool = type === "method-statement" ? METHOD_STATEMENT_TOOL : RISK_ASSESSMENT_TOOL;
+  const tool = type === "method-statement" ? METHOD_STATEMENT_TOOL
+    : type === "risk-assessment" ? RISK_ASSESSMENT_TOOL
+    : PROJECT_BRIEF_TOOL;
 
-  const userMessage = [
-    `Draft a ${type === "method-statement" ? "method statement" : "risk assessment task entry"} for the following task:`,
-    `"${taskDescription.trim()}"`,
-    projectName ? `Project: ${projectName}.` : null,
-    isMorganLovell ? `This is a Morgan Lovell site — stepladders are banned, do not include them as a control or access method.` : null
-  ].filter(Boolean).join("\n");
+  const systemPrompt = type === "project-brief" ? BRIEF_SYSTEM_PROMPT : SYSTEM_PROMPT;
+
+  const userMessage = type === "project-brief"
+    ? `Extract the project details from this brief/email text:\n\n${taskDescription.trim()}`
+    : [
+        `Draft a ${type === "method-statement" ? "method statement" : "risk assessment task entry"} for the following task:`,
+        `"${taskDescription.trim()}"`,
+        projectName ? `Project: ${projectName}.` : null,
+        isMorganLovell ? `This is a Morgan Lovell site — stepladders are banned, do not include them as a control or access method.` : null
+      ].filter(Boolean).join("\n");
 
   try {
     const res = await fetch(ANTHROPIC_API_URL, {
@@ -114,7 +156,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 900,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
         tools: [tool],
         tool_choice: { type: "tool", name: tool.name }
