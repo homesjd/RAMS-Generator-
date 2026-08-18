@@ -1,0 +1,208 @@
+:root{
+  --navy1:#1B2A4B;
+  --navy2:#304776;
+  --gold:#C9A84C;
+  --green:#217343;
+  --grey:#F2F2F2;
+  --line:#C9C4B6;
+  --ink:#1A1A1A;
+  --paper:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{
+  font-family:Arial, "Helvetica Neue", Helvetica, sans-serif;
+  color:var(--ink);
+  margin:0;
+}
+
+/* ---------- Document (RAMS) look — shared by preview + sign page + print ---------- */
+.doc{
+  background:var(--paper);
+  max-width:900px;
+  margin:0 auto;
+  padding:28px 30px 50px;
+}
+.doc-logo{
+  height:34px;
+  margin-bottom:10px;
+  display:block;
+}
+.doc-title{
+  text-align:center;
+  color:var(--navy1);
+  font-size:22px;
+  font-weight:700;
+  margin:0 0 18px;
+}
+table.doc-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:16px;
+  font-size:13px;
+}
+table.doc-table td, table.doc-table th{
+  border:1px solid #000;
+  padding:7px 9px;
+  vertical-align:top;
+  text-align:left;
+}
+table.doc-table td.label, table.doc-table th.label{
+  color:var(--navy1);
+  font-weight:bold;
+  width:33%;
+}
+.doc-section-box{
+  border:1px solid #000;
+  padding:12px 14px;
+  margin-bottom:16px;
+}
+.doc-section-box.shaded{
+  background:var(--grey);
+}
+.doc-section-title{
+  font-weight:bold;
+  font-size:13px;
+  margin:0 0 8px;
+}
+.doc-section-title.navy{ color:var(--navy1); }
+ul.doc-list, ol.doc-list{
+  margin:0 0 0 0;
+  padding-left:20px;
+  font-size:13px;
+}
+ul.doc-list li, ol.doc-list li{
+  margin-bottom:6px;
+  line-height:1.45;
+}
+.doc-subhead{
+  font-weight:bold;
+  font-size:13px;
+  color:var(--navy1);
+  margin:14px 0 8px;
+}
+.doc-ms-block{
+  border-bottom:1px solid #000;
+  padding:14px 0;
+}
+.doc-ms-block:first-child{padding-top:0;}
+.doc-ms-block:last-child{border-bottom:none;}
+.doc-ms-title{
+  color:var(--navy1);
+  font-weight:bold;
+  font-size:14px;
+  margin:0 0 10px;
+}
+.doc-risk-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12.5px;
+  margin-bottom:4px;
+}
+.doc-risk-table th, .doc-risk-table td{
+  border:1px solid #000;
+  padding:6px 8px;
+  text-align:left;
+  vertical-align:top;
+}
+.doc-risk-table th{ background:#EFEFEF; }
+.doc-risk-task-header{
+  background:var(--navy1);
+  color:#fff;
+  font-weight:bold;
+  padding:7px 9px;
+  border:1px solid #000;
+  font-size:13px;
+}
+.doc-risk-meta-row{
+  border:1px solid #000;
+  border-top:none;
+  padding:7px 9px;
+  font-size:12.5px;
+}
+.doc-risk-meta-row b{ color:var(--navy1); }
+.doc-risk-block{ margin-bottom:18px; }
+.doc-two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+}
+.doc-empty-note{
+  color:#888;
+  font-style:italic;
+}
+
+/* ---------- Risk matrix ---------- */
+.doc-risk-matrix{
+  border-collapse:collapse;
+  font-size:11px;
+  margin:0 auto;
+}
+.doc-risk-matrix caption{
+  font-weight:bold;
+  font-size:12px;
+  color:var(--navy1);
+  margin-bottom:8px;
+  caption-side:top;
+}
+.doc-risk-matrix td{
+  border:1px solid #999;
+  padding:6px 8px;
+  text-align:center;
+}
+.rm-head{
+  background:#EFEFEF;
+  font-weight:bold;
+}
+.rm-sub{ font-weight:normal; font-size:9.5px; color:#555; }
+.rm-sev-label{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  background:#EFEFEF;
+  font-weight:bold;
+}
+.rm-corner{ background:#fff; border:none !important; }
+.rm-cell{ font-weight:bold; }
+.rr-low{ background:#D5EDD8; color:#1D6B32; }
+.rr-medium{ background:#FCE8B8; color:#8A6100; }
+.rr-high{ background:#F5C6C6; color:#9B1C1C; }
+
+/* ---------- COSHH blocks ---------- */
+.doc-coshh-block{
+  border-bottom:1px solid #ccc;
+  padding:8px 0;
+}
+.doc-coshh-block:last-child{ border-bottom:none; }
+.doc-coshh-name{
+  font-weight:bold;
+  font-size:13px;
+  color:var(--navy1);
+  margin:0 0 4px;
+}
+.doc-coshh-ref{
+  font-weight:normal;
+  font-size:11px;
+  color:#666;
+}
+.doc-coshh-comp{ font-size:12px; margin:0 0 6px; }
+.doc-coshh-table{ font-size:11.5px; margin-bottom:6px; }
+.doc-coshh-foot{ font-size:11px; margin:2px 0; color:#333; }
+
+/* ---------- Tier 2 banner ---------- */
+.doc-tier2-banner{
+  background:#F5C6C6;
+  border:2px solid #9B1C1C;
+  color:#7A1414;
+  padding:10px 14px;
+  border-radius:4px;
+  font-size:13px;
+  margin-bottom:16px;
+}
+
+/* ---------- Print rules ---------- */
+@media print{
+  body{ background:#fff; }
+  .no-print{ display:none !important; }
+  .doc{ max-width:none; padding:0; margin:0; }
+  .doc-ms-block, .doc-risk-block{ break-inside:avoid; }
+  table.doc-table{ break-inside:avoid; }
+}

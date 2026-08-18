@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>RAMS Sign-Off — Interior Impressions Ltd</title>
+<link rel="stylesheet" href="doc-style.css">
+<style>
+  body{ background:#EFECE3; }
+  .wrap{ max-width:900px; margin:0 auto; padding:0 0 60px; }
+  .doc-wrap{ background:#fff; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .error-box{
+    max-width:600px; margin:60px auto; background:#fff; border:1px solid var(--line);
+    border-radius:6px; padding:24px; text-align:center; font-size:14px; color:#444;
+  }
+  .signoff-card{
+    max-width:900px; margin:0 auto; background:#fff;
+    border-top:4px solid var(--gold);
+    padding:22px 24px 30px;
+  }
+  .signoff-card h2{
+    color:var(--navy1); font-size:16px; margin:0 0 14px;
+    text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--navy2); font-weight:bold; margin-bottom:5px;
+  }
+  .field input[type="text"], .field input[type="date"]{
+    width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-size:15px;
+  }
+  .confirm-row{
+    display:flex; align-items:flex-start; gap:10px; background:#F1EDE3;
+    border:1px solid var(--line); border-radius:4px; padding:12px 14px; margin-bottom:16px;
+  }
+  .confirm-row input{ margin-top:3px; }
+  .confirm-row span{ font-size:13.5px; line-height:1.45; color:#333; }
+  .sig-label-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .sig-label-row label{ margin:0; }
+  .sig-clear{ font-size:11px; color:var(--navy2); background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
+  canvas{ width:100%; height:150px; background:#fff; border:1px solid var(--line); border-radius:3px; touch-action:none; display:block; }
+  .sig-hint{ font-size:11px; color:#8a8577; margin-top:5px; }
+  button.submit{
+    width:100%; background:var(--gold); color:var(--navy1); border:none; padding:14px;
+    font-size:15px; font-weight:bold; letter-spacing:0.03em; border-radius:3px; cursor:pointer;
+    margin:8px 0 6px; text-transform:uppercase;
+  }
+  button.submit:disabled{ background:#DCD3B8; color:#8a8577; cursor:not-allowed; }
+  .confirmed-view{ display:none; padding:50px 30px 60px; text-align:center; }
+  .stamp{
+    display:inline-block; border:4px solid var(--green); color:var(--green); border-radius:8px;
+    padding:14px 22px; transform:rotate(-8deg) scale(0.6); opacity:0; font-weight:800;
+    letter-spacing:0.06em; font-size:20px; text-transform:uppercase;
+    animation:stampIn 0.45s cubic-bezier(.2,1.4,.4,1) 0.15s forwards;
+  }
+  @keyframes stampIn{ to{ transform:rotate(-8deg) scale(1); opacity:1; } }
+  .stamp small{ display:block; font-family: ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; margin-top:4px; font-weight:normal; }
+  .confirmed-text{ margin-top:26px; font-size:14px; color:#444; line-height:1.5; }
+  @media (prefers-reduced-motion: reduce){ .stamp{ animation:none; opacity:1; transform:rotate(-8deg) scale(1); } }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="wrap">
+  <!-- populated by JS -->
+</div>
+
+<!-- Static form for Netlify Forms build-time detection -->
+<form name="rams-signoff" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="ramsTitle" />
+  <input type="text" name="ramsProject" />
+  <input type="text" name="operativeName" />
+  <input type="text" name="dateSigned" />
+  <input type="text" name="confirmed" />
+  <textarea name="signatureImage"></textarea>
+  <input name="bot-field" />
+</form>
+
+<script src="logo-data.js"></script>
+<script src="coshh-library.js"></script>
+<script src="ppe-library.js"></script>
+<script src="render.js"></script>
+<script>
+const wrap = document.getElementById("wrap");
+const params = new URLSearchParams(window.location.search);
+const encoded = params.get("d");
+
+if (!encoded) {
+  wrap.innerHTML = `<div class="error-box">No RAMS data found in this link. Ask the sender to re-share the sign-off link from the RAMS Builder.</div>`;
+} else {
+  let data;
+  try {
+    data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+  } catch(e) {
+    data = null;
+  }
+  if (!data) {
+    wrap.innerHTML = `<div class="error-box">This sign-off link could not be read. Ask the sender to generate a new link from the RAMS Builder.</div>`;
+  } else {
+    renderPage(data);
+  }
+}
+
+function renderPage(data){
+  wrap.innerHTML = `
+    <div class="doc-wrap">${renderRamsDocument(data)}</div>
+    <div class="signoff-card" id="signoffCard">
+      <h2>Confirm you have read this RAMS</h2>
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="opName" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="opDate">
+      </div>
+      <div class="confirm-row">
+        <input type="checkbox" id="opConfirm">
+        <span>I confirm I have read and understood this RAMS and will comply with the controls set out above before starting work.</span>
+      </div>
+      <div class="field">
+        <div class="sig-label-row">
+          <label for="sigCanvas">Sign here</label>
+          <button type="button" class="sig-clear" id="sigClear">Clear</button>
+        </div>
+        <canvas id="sigCanvas"></canvas>
+        <p class="sig-hint">Draw your signature above with your finger or mouse.</p>
+      </div>
+      <button class="submit" id="submitBtn" disabled>Sign &amp; Submit</button>
+    </div>
+    <div class="confirmed-view" id="confirmedView">
+      <div class="stamp">Signed &amp; Accepted<small id="stampMeta">—</small></div>
+      <p class="confirmed-text" id="confirmedText"></p>
+    </div>
+  `;
+
+  const dateInput = document.getElementById("opDate");
+  dateInput.value = new Date().toISOString().slice(0,10);
+
+  const canvas = document.getElementById("sigCanvas");
+  const ctx = canvas.getContext("2d");
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1B2A4B";
+  }
+  resizeCanvas();
+  let drawing = false, hasSignature = false;
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+  function start(e){ drawing = true; hasSignature = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); checkReady(); }
+  function move(e){ if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function end(){ drawing = false; }
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, {passive:false});
+  canvas.addEventListener("touchmove", move, {passive:false});
+  canvas.addEventListener("touchend", end);
+  document.getElementById("sigClear").addEventListener("click", () => {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    hasSignature = false;
+    checkReady();
+  });
+
+  const opName = document.getElementById("opName");
+  const opConfirm = document.getElementById("opConfirm");
+  const submitBtn = document.getElementById("submitBtn");
+  function checkReady(){
+    submitBtn.disabled = !(opName.value.trim() && opConfirm.checked && hasSignature && dateInput.value);
+  }
+  [opName, dateInput].forEach(el => el.addEventListener("input", checkReady));
+  opConfirm.addEventListener("change", checkReady);
+
+  function encodeForm(d) {
+    return Object.keys(d).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(d[k])).join("&");
+  }
+
+  submitBtn.addEventListener("click", () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting…";
+    const signatureImage = canvas.toDataURL("image/png");
+    const payload = {
+      "form-name": "rams-signoff",
+      ramsTitle: (data.meta && data.meta.docTitle) || "",
+      ramsProject: (data.meta && data.meta.projectName) || "",
+      operativeName: opName.value.trim(),
+      dateSigned: dateInput.value,
+      confirmed: "yes",
+      signatureImage: signatureImage
+    };
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: encodeForm(payload)
+    }).then(() => {
+      document.getElementById("signoffCard").style.display = "none";
+      document.getElementById("stampMeta").textContent = opName.value.trim() + " · " + dateInput.value;
+      document.getElementById("confirmedText").textContent =
+        "Thanks, " + opName.value.trim() + ". Your sign-off has been recorded.";
+      document.getElementById("confirmedView").style.display = "block";
+    }).catch(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Sign & Submit";
+      alert("Submission failed — check your connection and try again.");
+    });
+  });
+}
+</script>
+</body>
+</html>
