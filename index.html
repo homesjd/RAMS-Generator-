@@ -138,6 +138,9 @@
       <button class="btn btn-gold" id="shareBtn">Generate Sign-Off Link</button>
       <button class="btn btn-outline" id="complianceBtn">Check Compliance (ML 2025)</button>
       <button class="btn btn-outline" id="loadSampleBtn">Load Sample RAMS</button>
+      <button class="btn btn-outline" id="exportBtn">Export Draft (.json)</button>
+      <button class="btn btn-outline" id="importBtn">Import Draft</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
       <button class="btn btn-outline" id="clearBtn">Clear Form</button>
     </div>
     <div class="share-box no-print" id="complianceBox">
@@ -265,6 +268,16 @@ function section(id, title, innerHtml, openDefault){
 }
 
 formBody.innerHTML = `
+  <div class="repeat-item" style="background:#F1EDE3; border-color:var(--navy2);">
+    <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold; display:block; margin-bottom:6px;">Quick-fill from a project brief or client email</label>
+    <textarea id="briefInput" placeholder="Paste the project brief, RFQ, or client email here…" style="width:100%; min-height:90px; padding:8px; border:1px solid #D3CDBD; border-radius:4px; font-size:13px; font-family:inherit; resize:vertical;"></textarea>
+    <div style="margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button type="button" class="add-btn" id="briefDraftBtn">Auto-fill from brief</button>
+      <span class="hint" id="briefStatus" style="margin-top:0;"></span>
+    </div>
+    <p class="hint" style="margin-top:6px;">Fills project name, location, dates, workforce numbers, materials, permits and scope where mentioned in the text. Leaves everything else untouched. Review before relying on it.</p>
+  </div>
+
   ${section("sec-meta", "1 · Project & Site", `
     <div class="field"><label>Document Title / Task</label><input type="text" id="f-docTitle"></div>
     <div class="row2">
@@ -822,6 +835,60 @@ document.getElementById("riskAddFromLibraryBtn").addEventListener("click", () =>
   renderPreview();
 });
 
+// ---------------------------------------------------------------
+// AI quick-fill from a pasted project brief / client email
+// Fills project details, workforce numbers, materials, permits and
+// scope where the AI actually found them in the text — never blanks
+// out a field you've already typed, and never invents figures that
+// weren't in the source text (enforced in the function's prompt).
+// ---------------------------------------------------------------
+function fillIfPresent(obj, key, val){
+  if (val !== undefined && val !== null && String(val).trim() !== "") obj[key] = val;
+}
+function applyBriefDraft(d){
+  if (!d) return;
+  fillIfPresent(STATE.meta, "docTitle", d.docTitle);
+  fillIfPresent(STATE.meta, "projectName", d.projectName);
+  fillIfPresent(STATE.meta, "projectNumber", d.projectNumber);
+  fillIfPresent(STATE.meta, "otherContractors", d.otherContractors);
+  fillIfPresent(STATE.schedule, "location", d.location);
+  fillIfPresent(STATE.schedule, "startDate", d.startDate);
+  fillIfPresent(STATE.schedule, "duration", d.duration);
+  fillIfPresent(STATE, "personnelCount", d.personnelCount);
+  fillIfPresent(STATE, "onsiteSupervisor", d.onsiteSupervisor);
+  if (Array.isArray(d.scope) && d.scope.length) STATE.scope = d.scope;
+  if (Array.isArray(d.materials) && d.materials.length) STATE.materials = d.materials;
+  if (Array.isArray(d.plantEquipment) && d.plantEquipment.length) STATE.plantEquipment = d.plantEquipment;
+  if (Array.isArray(d.permits) && d.permits.length) STATE.permits = STATE.permits.concat(d.permits);
+  syncFormFromState();
+  renderPreview();
+}
+document.getElementById("briefDraftBtn").addEventListener("click", async () => {
+  const input = document.getElementById("briefInput");
+  const statusEl = document.getElementById("briefStatus");
+  const text = input.value.trim();
+  if (!text) { statusEl.textContent = "Paste some brief text first."; statusEl.style.color = "#9B1C1C"; return; }
+  const btn = document.getElementById("briefDraftBtn");
+  btn.disabled = true;
+  statusEl.textContent = "Reading brief…";
+  statusEl.style.color = "";
+  try {
+    const res = await fetch("/.netlify/functions/draft-rams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "project-brief", taskDescription: text })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    applyBriefDraft(data.draft);
+    statusEl.textContent = "Fields filled in below, review before relying on it.";
+  } catch (e) {
+    statusEl.textContent = "Auto-fill failed: " + e.message;
+    statusEl.style.color = "#9B1C1C";
+  }
+  btn.disabled = false;
+});
+
 document.getElementById("riskAiDraftBtn").addEventListener("click", async () => {
   const input = document.getElementById("riskAiInput");
   const statusEl = document.getElementById("riskAiStatus");
@@ -984,6 +1051,57 @@ document.getElementById("clearBtn").addEventListener("click", () => {
   if (!confirm("Clear the whole form?")) return;
   window.location.reload();
 });
+
+// ---------------------------------------------------------------
+// Export / Import drafts (whole-form save and reuse as a template)
+// ---------------------------------------------------------------
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const nameSafe = (STATE.meta.projectName || "RAMS-draft").trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "RAMS-draft";
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Interior Impressions - ${nameSafe} - RAMS Draft - ${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+document.getElementById("importFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      applyImportedState(data);
+      syncFormFromState();
+      renderPreview();
+      alert("Draft loaded: " + (STATE.meta.projectName || "(untitled project)"));
+    } catch (err) {
+      alert("Could not load that file, it may not be a RAMS Builder draft: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+// Mutates the existing STATE object in place (rather than replacing it)
+// so fields bound by direct object reference (meta/schedule/emergency)
+// keep working after import — see syncFormFromState/bind() above.
+function applyImportedState(data){
+  if (!data || typeof data !== "object") throw new Error("Invalid draft file.");
+  Object.assign(STATE.meta, data.meta || {});
+  Object.assign(STATE.schedule, data.schedule || {});
+  Object.assign(STATE.emergency, data.emergency || {});
+  Object.keys(STATE).forEach((k) => {
+    if (["meta", "schedule", "emergency"].includes(k)) return;
+    if (data[k] !== undefined) STATE[k] = data[k];
+  });
+}
 
 // ---------------------------------------------------------------
 // Compliance Check (Morgan Lovell Supply Chain H&S Standards 2025)
