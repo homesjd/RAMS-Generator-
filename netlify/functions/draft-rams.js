@@ -11,7 +11,7 @@
 // ---------------------------------------------------------------
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-haiku-4-5";
 
 const METHOD_STATEMENT_TOOL = {
   name: "submit_method_statement",
@@ -113,7 +113,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1500,
+        max_tokens: 900,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
         tools: [tool],
