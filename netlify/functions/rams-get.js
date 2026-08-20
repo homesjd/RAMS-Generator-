@@ -4,6 +4,18 @@
 // ---------------------------------------------------------------
 const { getStore } = require("@netlify/blobs");
 
+// The automatic site-linking that @netlify/blobs normally relies on
+// isn't available in this environment, so we pass credentials
+// explicitly. Site ID is not sensitive; the token comes from an
+// environment variable set in Netlify's dashboard.
+function ramsStore() {
+  return getStore({
+    name: "rams-documents",
+    siteID: "a6fed072-1d48-45a3-9581-d4bed70cd68b",
+    token: process.env.BLOBS_TOKEN
+  });
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
@@ -15,7 +27,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore("rams-documents");
+    const store = ramsStore();
     const record = await store.get(id, { type: "json" });
     if (!record) {
       return { statusCode: 404, body: JSON.stringify({ error: "No RAMS found for this link." }) };
