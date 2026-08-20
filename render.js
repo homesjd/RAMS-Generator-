@@ -79,13 +79,17 @@ function renderWorkforceTable(workforce){
 function renderPermits(permits, permitType, issuedBy){
   const rows = (permits || []).filter(p => p && p.item);
   const body = rows.length
-    ? `<table class="doc-table">${rows.map(p => `<tr><td class="label">${esc(p.item)}</td><td>${esc(p.value || "Not Applicable")}</td></tr>`).join("")}</table>`
+    ? `<table class="doc-table">
+        <tr><th class="label" style="width:30%;">Permit</th><th class="label" style="width:40%;">Status / Detail</th><th class="label">Issued By</th></tr>
+        ${rows.map(p => `<tr><td class="label">${esc(p.item)}</td><td>${esc(p.value || "Not Applicable")}</td><td>${p.issuedBy ? esc(p.issuedBy) : "—"}</td></tr>`).join("")}
+      </table>`
     : `<p class="doc-empty-note">No permits identified for this task.</p>`;
-  return `${body}
-  <table class="doc-table" style="margin-top:8px;">
-    <tr><td class="label" style="width:33%;">Permit Type:</td><td>${textOrDash(permitType)}</td></tr>
-    <tr><td class="label">Issued By:</td><td>${textOrDash(issuedBy)}</td></tr>
-  </table>`;
+  const fallback = (permitType || issuedBy)
+    ? `<table class="doc-table" style="margin-top:8px;">
+        <tr><td class="label" style="width:33%;">Permit Coordinator (default, if not stated per permit above):</td><td>${textOrDash(permitType)} ${issuedBy ? "— " + esc(issuedBy) : ""}</td></tr>
+      </table>`
+    : "";
+  return `${body}${fallback}`;
 }
 
 function renderMethodStatements(methodStatements){
@@ -213,6 +217,28 @@ function renderRiskTaskBlocks(riskRegister){
       <div class="doc-risk-meta-row"><b>Review Date:</b> ${textOrDash(t.reviewDate)} — <b>Next Review:</b> ${textOrDash(t.nextReview)}</div>
     </div>`;
   }).join("");
+}
+
+// ---------------- Validity / stop-work clause (always shown) ----------------
+function renderValidityClause(){
+  return `
+  <div class="doc-section-box shaded">
+    <p class="doc-section-title">VALIDITY OF THIS RAMS</p>
+    <p style="font-size:12.5px; margin:0;">This RAMS is based on the site conditions, scope and access arrangements described above. If conditions found on the day differ from what is described here — including but not limited to access, structural condition, presence of unforeseen hazards, or the presence of others in the work area — <b>work must stop</b> and this RAMS must be reviewed and updated before continuing.</p>
+  </div>`;
+}
+
+// ---------------- Core legislation reference (always shown) ----------------
+function renderCoreLegislation(){
+  const list = (typeof CORE_LEGISLATION !== "undefined") ? CORE_LEGISLATION : [];
+  if (!list.length) return "";
+  return `
+  <div class="doc-section-box">
+    <p class="doc-section-title navy">APPLICABLE LEGISLATION</p>
+    <table class="doc-table" style="font-size:11.5px;">
+      ${list.map(l => `<tr><td class="label" style="width:38%;">${esc(l.ref)}</td><td>${esc(l.title)}</td></tr>`).join("")}
+    </table>
+  </div>`;
 }
 
 // ---------------- Sign-off record tables (paper backup) ----------------
@@ -345,6 +371,8 @@ function renderRamsDocument(data){
       ${listOrEmpty(data.keyControls, "No key controls specified.")}
     </div>
 
+    ${renderValidityClause()}
+
     <div class="doc-section-box">
       <p class="doc-section-title navy">SCOPE OF WORK:</p>
       ${listOrEmpty(data.scope, "No scope specified.")}
@@ -358,6 +386,7 @@ function renderRamsDocument(data){
         <tr><td class="label" style="width:33%;">No. of Personnel:</td><td>${textOrDash(data.personnelCount)}</td></tr>
         <tr><td class="label">Onsite Supervisor (Contact):</td><td>${textOrDash(data.onsiteSupervisor)}</td></tr>
         <tr><td class="label">Person Responsible for Monitoring/Review:</td><td>${textOrDash(data.personResponsibleMonitoring)}</td></tr>
+        <tr><td class="label">Lone Working Arrangements:</td><td>${textOrDash(data.loneWorking)}</td></tr>
       </table>
       ${renderWorkforceTable(data.workforce)}
     </div>
@@ -390,7 +419,7 @@ function renderRamsDocument(data){
       ${renderStructuredRow("3.1", "WORK AT HEIGHT: FALLING OBJECT PREVENTION", data.workAtHeightFalling)}
       ${renderStructuredRow("4.0", "WASTE REMOVAL:", data.wasteRemoval)}
       ${renderStructuredRow("4.1", "HOUSEKEEPING / STORAGE:", data.housekeeping)}
-      ${renderStructuredRow("4.2", "PREVENTION OF LEAKS &amp; SPILLS:", data.leaksSpills)}
+      ${renderStructuredRow("4.2", "PREVENTION OF LEAKS & SPILLS:", data.leaksSpills)}
     </table>
 
     <table class="doc-table">
@@ -437,6 +466,8 @@ function renderRamsDocument(data){
     ${renderComplianceNotes(data.complianceNotes)}
 
     ${renderDigitalSignatures(data.signatures)}
+
+    ${renderCoreLegislation()}
 
     ${renderSignOffRecords()}
 

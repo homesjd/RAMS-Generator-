@@ -62,6 +62,23 @@ const EXCAVATION_CHECKLIST = [
   "Excavations inspected prior to each shift, after adverse weather, and before anyone enters."
 ];
 
+// Core UK H&S legislation — always shown on every RAMS as a
+// standing reference, alongside the BS/EN product standards already
+// cited in the PPE section.
+const CORE_LEGISLATION = [
+  { ref: "Health and Safety at Work etc. Act 1974", title: "Primary UK legislation placing general duties on employers, employees and the self-employed." },
+  { ref: "Management of Health and Safety at Work Regulations 1999", title: "Requires suitable and sufficient risk assessment of work activities." },
+  { ref: "Construction (Design and Management) Regulations 2015", title: "Sets out duties for construction projects, including RAMS/Safe Systems of Work." },
+  { ref: "Work at Height Regulations 2005", title: "Duty to avoid, prevent falls, and follow the hierarchy of work-at-height measures." },
+  { ref: "Manual Handling Operations Regulations 1992 (as amended)", title: "Avoid, assess and reduce risk from manual handling activities." },
+  { ref: "Control of Substances Hazardous to Health Regulations (COSHH) 2002", title: "Assess and control exposure to hazardous substances." },
+  { ref: "Provision and Use of Work Equipment Regulations (PUWER) 1998", title: "Equipment must be suitable, maintained and used only by trained persons." },
+  { ref: "Personal Protective Equipment at Work Regulations 1992 (as amended 2022)", title: "PPE to be provided, suitable, maintained and used correctly." },
+  { ref: "Control of Noise at Work Regulations 2005", title: "Assess and control exposure to noise; action levels 80/85 dB(A)." },
+  { ref: "Control of Vibration at Work Regulations 2005", title: "Assess and control exposure to hand-arm and whole-body vibration." },
+  { ref: "RIDDOR — Reporting of Injuries, Diseases and Dangerous Occurrences Regulations 2013", title: "Statutory duty to report certain workplace incidents." }
+];
+
 // Standard RAMS content requirements — used for the completeness checker.
 // Each item maps to a builder field/section so we can flag what's covered.
 // Combined RAMS completeness checklist — union of:

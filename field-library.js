@@ -113,6 +113,12 @@ const FIELD_OPTIONS = {
     { label: "MEWP/tower — rescue plan required", text: "Rescue plan in place for the access equipment in use: descent/lowering procedure known to all operatives, rescue equipment available on site, and emergency services contact confirmed in the event self-rescue is not possible." }
   ],
 
+  loneWorking: [
+    { label: "Not applicable — team of 2+ on site", text: "Not applicable — more than one operative on site throughout this task." },
+    { label: "Single operative — standard check-in", text: "This is a lone-working task. Operative to check in with the office at the start and end of the task, and if any delay beyond 30 minutes occurs. Mobile phone signal confirmed adequate on site before starting. Office contact: 01628 665821." },
+    { label: "Single operative — higher-risk task, more frequent check-ins", text: "This is a lone-working task involving a higher-risk activity (e.g. work at height). Operative to check in with the office at the start, at agreed intervals during the task, and at completion. Mobile phone signal confirmed adequate on site. If contact is missed, the office will attempt to reach the operative immediately and escalate to site management/emergency services if unreachable within 15 minutes." }
+  ],
+
   occupationalHealth: [
     { label: "Standard — hierarchy of controls followed", text: "Control measures follow the hierarchy of prevention: elimination and substitution considered first, followed by engineering controls, then administrative controls, with PPE as the last resort. No specific occupational health surveillance identified for this task based on the risk assessment." },
     { label: "Health surveillance required (dust/noise/vibration exposure)", text: "Hierarchy of controls applied — elimination/substitution, engineering controls, administrative controls, PPE as last resort. Operatives regularly exposed to dust, noise, or vibration on this type of work are included in the company's periodic health surveillance programme." }
