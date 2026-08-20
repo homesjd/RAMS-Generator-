@@ -1,16 +1,14 @@
 // ---------------------------------------------------------------
 // rams-save.js — Netlify serverless function
 // Saves a RAMS document to Netlify Blobs and returns a short share
-// ID. If an existing id is passed, updates that record's data
-// in place (used when the preparer edits after generating a link)
-// without touching any signatures already collected.
+// ID. If an existing id is passed and that record has NO signatures
+// yet, it's updated in place. If it HAS been signed (by the
+// preparer or any operative), the content is instead saved as a
+// brand-new record — protecting the signed copy from ever being
+// silently changed under its own signatures.
 // ---------------------------------------------------------------
 const { getStore } = require("@netlify/blobs");
 
-// The automatic site-linking that @netlify/blobs normally relies on
-// isn't available in this environment, so we pass credentials
-// explicitly. Site ID is not sensitive; the token comes from an
-// environment variable set in Netlify's dashboard.
 function ramsStore() {
   return getStore({
     name: "rams-documents",
@@ -20,11 +18,15 @@ function ramsStore() {
 }
 
 function makeId() {
-  // Short, URL-friendly, human-typeable if needed.
   const chars = "abcdefghjkmnpqrstuvwxyz23456789"; // no 0/o/1/l/i ambiguity
   let id = "";
   for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
   return id;
+}
+
+function hasAnySignature(record) {
+  const sig = record && record.signatures;
+  return !!(sig && (sig.preparer || (sig.operatives && sig.operatives.length)));
 }
 
 exports.handler = async (event) => {
@@ -51,16 +53,40 @@ exports.handler = async (event) => {
     if (existingId) {
       const existing = await store.get(existingId, { type: "json" });
       if (existing) {
-        existing.data = data;
-        existing.updatedAt = now;
-        await store.setJSON(existingId, existing);
-        return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ id: existingId }) };
+        if (!hasAnySignature(existing)) {
+          // Safe to update in place — nobody has signed this yet.
+          existing.data = data;
+          existing.updatedAt = now;
+          await store.setJSON(existingId, existing);
+          return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ id: existingId, forked: false }) };
+        }
+
+        // Already signed — fork into a new record rather than
+        // overwrite. The signed original is left untouched.
+        let newId = makeId();
+        for (let attempts = 0; attempts < 5; attempts++) {
+          const clash = await store.get(newId, { type: "json" });
+          if (!clash) break;
+          newId = makeId();
+        }
+        const forkedRecord = {
+          data,
+          signatures: { preparer: null, operatives: [] },
+          createdAt: now,
+          updatedAt: now,
+          supersedes: existingId
+        };
+        await store.setJSON(newId, forkedRecord);
+        return {
+          statusCode: 200,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id: newId, forked: true, previousId: existingId })
+        };
       }
       // fall through to create a new one if the id wasn't found
     }
 
     let id = makeId();
-    // Avoid extremely unlikely collision.
     for (let attempts = 0; attempts < 5; attempts++) {
       const clash = await store.get(id, { type: "json" });
       if (!clash) break;
@@ -75,7 +101,7 @@ exports.handler = async (event) => {
     };
     await store.setJSON(id, record);
 
-    return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) };
+    return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify({ id, forked: false }) };
   } catch (e) {
     return { statusCode: 500, body: JSON.stringify({ error: `Save failed: ${e.message}` }) };
   }
