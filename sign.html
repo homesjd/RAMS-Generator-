@@ -77,6 +77,20 @@
 </head>
 <body>
 
+<!-- Hidden static form purely to trigger Netlify's free email
+     notification when someone signs. The actual signed document
+     lives in Netlify Blobs (see rams-sign.js) — this is a
+     lightweight, best-effort side-channel only. -->
+<form name="rams-signed" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="role" />
+  <input type="text" name="operativeName" />
+  <input type="text" name="ramsTitle" />
+  <input type="text" name="ramsProject" />
+  <input type="text" name="dateSigned" />
+  <input type="text" name="signOffLink" />
+  <input name="bot-field" />
+</form>
+
 <div class="wrap" id="wrap">
   <div class="loading-box">Loading RAMS…</div>
 </div>
@@ -202,6 +216,21 @@ function renderPage(record){
       });
       const updated = await res.json();
       if (!res.ok) throw new Error(updated.error || `Submission failed (${res.status})`);
+
+      // Best-effort notification email via Netlify Forms — never
+      // blocks or fails the actual sign-off if this doesn't work.
+      try {
+        const formBody = new URLSearchParams({
+          "form-name": "rams-signed",
+          role: "operative",
+          operativeName: opName.value.trim(),
+          ramsTitle: (data.meta && data.meta.docTitle) || "",
+          ramsProject: (data.meta && data.meta.projectName) || "",
+          dateSigned: dateInput.value,
+          signOffLink: window.location.href
+        }).toString();
+        fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: formBody });
+      } catch (e) { /* notification is best-effort only */ }
 
       // Re-render the document with the new signature included
       document.getElementById("docWrap").innerHTML = renderRamsDocument({ ...updated.data, signatures: updated.signatures });
