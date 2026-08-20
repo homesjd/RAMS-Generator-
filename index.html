@@ -178,6 +178,10 @@
           <button class="btn btn-navy" id="copyLinkBtn">Copy</button>
         </div>
         <p class="hint">Send this link by text or email. Anyone who opens it sees the full RAMS and can sign — no login needed.</p>
+        <div class="share-row" style="margin-top:10px;">
+          <button class="btn btn-outline" id="refreshSigBtn" style="flex:1;">Refresh Sign-Off Status</button>
+        </div>
+        <p class="hint" id="sigStatusText" style="margin-top:8px;"></p>
       </div>
       <div id="preparerSignWrap" style="margin-top:16px; display:none;">
         <label id="preparerSignLabel">You wrote this RAMS — sign it before sharing</label>
@@ -1226,12 +1230,8 @@ document.getElementById("shareBtn").addEventListener("click", async () => {
     // Show preparer sign-in (pre-fill name from Prepared By if given)
     document.getElementById("preparerSignWrap").style.display = "block";
     resizePrepCanvas();
-    if (STATE.signatures.preparer) {
-      document.getElementById("preparerSignForm").style.display = "none";
-      document.getElementById("preparerAlreadySigned").style.display = "block";
-      document.getElementById("preparerAlreadySigned").textContent =
-        `Signed by ${STATE.signatures.preparer.name} on ${STATE.signatures.preparer.date}.`;
-    } else {
+    await refreshSignOffStatus();
+    if (!STATE.signatures.preparer) {
       document.getElementById("preparerName").value = STATE.meta.preparedBy || "";
     }
   } catch (e) {
@@ -1244,6 +1244,35 @@ document.getElementById("copyLinkBtn").addEventListener("click", () => {
   input.select();
   navigator.clipboard && navigator.clipboard.writeText(input.value);
 });
+
+async function refreshSignOffStatus(){
+  const statusEl = document.getElementById("sigStatusText");
+  if (!STATE.ramsId) { statusEl.textContent = ""; return; }
+  statusEl.textContent = "Checking…";
+  try {
+    const res = await fetch("/.netlify/functions/rams-get?id=" + encodeURIComponent(STATE.ramsId));
+    const record = await res.json();
+    if (!res.ok) throw new Error(record.error || "Could not check status.");
+    STATE.signatures = record.signatures;
+    renderPreview();
+    const prep = record.signatures.preparer;
+    const ops = record.signatures.operatives || [];
+    const parts = [];
+    parts.push(prep ? `Prepared & signed by ${prep.name} (${prep.date}).` : "Not yet signed by preparer.");
+    parts.push(ops.length
+      ? `${ops.length} operative${ops.length>1?"s":""} signed: ${ops.map(o=>o.name).join(", ")}.`
+      : "No operatives have signed yet.");
+    statusEl.textContent = parts.join(" ");
+    if (prep) {
+      document.getElementById("preparerSignForm").style.display = "none";
+      document.getElementById("preparerAlreadySigned").style.display = "block";
+      document.getElementById("preparerAlreadySigned").textContent = `Signed by ${prep.name} on ${prep.date}.`;
+    }
+  } catch (e) {
+    statusEl.textContent = "Could not check status: " + e.message;
+  }
+}
+document.getElementById("refreshSigBtn").addEventListener("click", refreshSignOffStatus);
 
 // --- Preparer signature pad ---
 const prepCanvas = document.getElementById("preparerSigCanvas");
