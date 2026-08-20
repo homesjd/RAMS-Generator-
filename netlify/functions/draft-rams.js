@@ -97,7 +97,7 @@ const RISK_ASSESSMENT_TOOL = {
   }
 };
 
-const SYSTEM_PROMPT = `You are drafting a first-pass entry for Interior Impressions Ltd, a UK commercial fit-out subcontractor (partitioning, ceilings, glass, doors, kitchen joinery). Match the house style of their existing RAMS library: concise, practical, UK English, HSE-aligned. This is a DRAFT for a SHEQ manager to review and edit before it goes into a signed-off RAMS document, so be specific and realistic rather than generic boilerplate. Likelihood and severity are each rated 1-5 (1=lowest). If the project is confirmed as a Morgan Lovell site, stepladders are banned outright, do not suggest stepladders as a control or access method for Morgan Lovell work; use podium steps, mobile tower, or MEWP instead.`;
+const SYSTEM_PROMPT = `You are drafting a first-pass entry for Interior Impressions Ltd, a UK commercial fit-out subcontractor (partitioning, ceilings, glass, doors, kitchen joinery). Match the house style of their existing RAMS library: concise, practical, UK English, HSE-aligned. This is a DRAFT for a SHEQ manager to review and edit before it goes into a signed-off RAMS document, so be specific and realistic rather than generic boilerplate. Likelihood and severity are each rated 1-5 (1=lowest). If the project's main contractor is known to prohibit stepladders on site, do not suggest stepladders as a control or access method; use podium steps, mobile tower, or MEWP instead.`;
 
 const BRIEF_SYSTEM_PROMPT = `You are extracting project details from a pasted brief, RFQ, or client email for Interior Impressions Ltd, a UK commercial fit-out subcontractor. Only include a field if it is explicitly stated or unambiguously clear in the text. Never guess, infer, or invent a project name, number, date, person's name, or figure that is not actually present in the text — omit the field entirely instead. Do not reformat dates beyond tidying obvious typos. This extraction feeds directly into a health and safety document, accuracy matters more than completeness.`;
 
@@ -121,7 +121,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body." }) };
   }
 
-  const { type, taskDescription, projectName, isMorganLovell } = payload;
+  const { type, taskDescription, projectName, stepladdersBanned } = payload;
   const VALID_TYPES = ["method-statement", "risk-assessment", "project-brief"];
   if (!type || !VALID_TYPES.includes(type)) {
     return { statusCode: 400, body: JSON.stringify({ error: `type must be one of ${VALID_TYPES.join(", ")}.` }) };
@@ -142,7 +142,7 @@ exports.handler = async (event) => {
         `Draft a ${type === "method-statement" ? "method statement" : "risk assessment task entry"} for the following task:`,
         `"${taskDescription.trim()}"`,
         projectName ? `Project: ${projectName}.` : null,
-        isMorganLovell ? `This is a Morgan Lovell site — stepladders are banned, do not include them as a control or access method.` : null
+        stepladdersBanned ? `Stepladders are banned on this site — do not include them as a control or access method.` : null
       ].filter(Boolean).join("\n");
 
   try {
