@@ -213,7 +213,7 @@ function todayISO(){ return new Date().toISOString().slice(0,10); }
 function fmtDateUK(iso){ if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 function addYearsISO(iso, years){ if(!iso) return ""; const d = new Date(iso); d.setFullYear(d.getFullYear()+years); return d.toISOString().slice(0,10); }
 function rrBandOf(score){ if(score>=15) return {label:"High",cls:"rr-high"}; if(score>=6) return {label:"Medium",cls:"rr-medium"}; return {label:"Low",cls:"rr-low"}; }
-function newHazard(){ return {hazard:"", whoAtRisk:"Operatives", controls:"", likelihood:2, severity:2}; }
+function newHazard(){ return {hazard:"", whoAtRisk:"Operatives", controls:"", likelihood:3, severity:3, residualLikelihood:1, residualSeverity:2}; }
 function newRiskTask(){
   const rd = defaultReviewDates();
   return { task:"", personAtRisk:"Operatives", reviewDate:rd.reviewDate, nextReview:rd.nextReview, hazards:[newHazard()] };
@@ -331,7 +331,16 @@ formBody.innerHTML = `
     </div>
     <div class="row2">
       <div class="field"><label>Date of Issue</label><input type="date" id="f-dateOfIssue"></div>
-      <div class="field"><label>Prepared By</label><input type="text" id="f-preparedBy"></div>
+      <div class="field"><label>Prepared By</label>
+        <select id="f-preparedBy">
+          <option value="">— Select —</option>
+          <option value="John Homes">John Homes</option>
+          <option value="Donovan Brooks">Donovan Brooks</option>
+          <option value="Scott Bannister">Scott Bannister</option>
+          <option value="__custom__">Other (type name)…</option>
+        </select>
+        <input type="text" id="f-preparedByCustom" placeholder="Type name..." style="display:none; margin-top:6px;">
+      </div>
     </div>
     <div class="field"><label>Prepared By — Phone</label><input type="text" id="f-preparedByPhone"></div>
     <div class="field"><label>Other Trade Contractors / Main Contractor Contact</label><textarea id="f-otherContractors"></textarea></div>
@@ -575,6 +584,39 @@ function bind(id, obj, key){
 }
 function setVal(id, val){ document.getElementById(id).value = val || ""; }
 
+const PREPARED_BY_PRESETS = ["John Homes", "Donovan Brooks", "Scott Bannister"];
+function syncPreparedByField(){
+  const select = document.getElementById("f-preparedBy");
+  const custom = document.getElementById("f-preparedByCustom");
+  const name = STATE.meta.preparedBy || "";
+  if (!name || PREPARED_BY_PRESETS.includes(name)) {
+    select.value = name;
+    custom.style.display = "none";
+    custom.value = "";
+  } else {
+    select.value = "__custom__";
+    custom.style.display = "block";
+    custom.value = name;
+  }
+}
+document.getElementById("f-preparedBy").addEventListener("change", (e) => {
+  const custom = document.getElementById("f-preparedByCustom");
+  if (e.target.value === "__custom__") {
+    custom.style.display = "block";
+    custom.focus();
+    STATE.meta.preparedBy = custom.value.trim();
+  } else {
+    custom.style.display = "none";
+    custom.value = "";
+    STATE.meta.preparedBy = e.target.value;
+  }
+  renderPreview();
+});
+document.getElementById("f-preparedByCustom").addEventListener("input", (e) => {
+  STATE.meta.preparedBy = e.target.value.trim();
+  renderPreview();
+});
+
 function syncFormFromState(){
   setVal("f-docTitle", STATE.meta.docTitle);
   setVal("f-projectName", STATE.meta.projectName);
@@ -582,7 +624,7 @@ function syncFormFromState(){
   setVal("f-docNumber", STATE.meta.docNumber);
   setVal("f-revision", STATE.meta.revision);
   setVal("f-dateOfIssue", STATE.meta.dateOfIssue);
-  setVal("f-preparedBy", STATE.meta.preparedBy);
+  syncPreparedByField();
   setVal("f-preparedByPhone", STATE.meta.preparedByPhone);
   setVal("f-otherContractors", STATE.meta.otherContractors);
   setVal("f-startDate", STATE.schedule.startDate);
@@ -639,7 +681,7 @@ function syncFormFromState(){
 
 [["f-docTitle","meta","docTitle"],["f-projectName","meta","projectName"],["f-projectNumber","meta","projectNumber"],
  ["f-docNumber","meta","docNumber"],["f-revision","meta","revision"],["f-dateOfIssue","meta","dateOfIssue"],
- ["f-preparedBy","meta","preparedBy"],["f-preparedByPhone","meta","preparedByPhone"],["f-otherContractors","meta","otherContractors"]
+ ["f-preparedByPhone","meta","preparedByPhone"],["f-otherContractors","meta","otherContractors"]
 ].forEach(([id,obj,key]) => bind(id, STATE[obj], key));
 
 [["f-startDate","schedule","startDate"],["f-duration","schedule","duration"],["f-location","schedule","location"]
@@ -892,16 +934,25 @@ function renderHazards(taskIndex, container){
     row.className = "hazard-row";
     const score = (Number(hz.likelihood)||1) * (Number(hz.severity)||1);
     const band = rrBandOf(score);
+    const rScore = (Number(hz.residualLikelihood)||1) * (Number(hz.residualSeverity)||1);
+    const rBand = rrBandOf(rScore);
     row.innerHTML = `
       <div class="field"><label>Hazard</label><input type="text" value="${hz.hazard}" data-k="hazard"></div>
       <div class="field"><label>Who Might Be Harmed</label><input type="text" value="${hz.whoAtRisk}" data-k="whoAtRisk"></div>
+      <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Initial Risk (before controls)</label>
       <div class="row2">
         <div class="field"><label>Likelihood (1-5)</label><select data-k="likelihood">${likSevOptions(hz.likelihood)}</select></div>
         <div class="field"><label>Severity (1-5)</label><select data-k="severity">${likSevOptions(hz.severity)}</select></div>
       </div>
-      <div class="rr-preview ${band.cls}" data-role="rr-preview">Risk Rating: ${score} (${band.label})</div>
-      <div class="field" style="margin-top:8px;"><label>Existing Controls</label><textarea data-k="controls">${hz.controls||""}</textarea></div>
-      <button type="button" class="add-btn sub rm-hazard" style="margin-bottom:4px;">Remove hazard</button>
+      <div class="rr-preview ${band.cls}" data-role="rr-preview">Initial Risk: ${score} (${band.label})</div>
+      <div class="field" style="margin-top:8px;"><label>Existing / Additional Controls</label><textarea data-k="controls">${hz.controls||""}</textarea></div>
+      <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold; margin-top:8px; display:block;">Residual Risk (after controls applied)</label>
+      <div class="row2">
+        <div class="field"><label>Likelihood (1-5)</label><select data-k="residualLikelihood">${likSevOptions(hz.residualLikelihood)}</select></div>
+        <div class="field"><label>Severity (1-5)</label><select data-k="residualSeverity">${likSevOptions(hz.residualSeverity)}</select></div>
+      </div>
+      <div class="rr-preview ${rBand.cls}" data-role="rr-preview-residual">RR: ${rScore} (${rBand.label})</div>
+      <button type="button" class="add-btn sub rm-hazard" style="margin-top:8px;">Remove hazard</button>
     `;
     row.querySelectorAll("[data-k]").forEach(inp => {
       const evt = inp.tagName === "SELECT" ? "change" : "input";
@@ -911,7 +962,12 @@ function renderHazards(taskIndex, container){
         const b = rrBandOf(s);
         const preview = row.querySelector('[data-role="rr-preview"]');
         preview.className = `rr-preview ${b.cls}`;
-        preview.textContent = `Risk Rating: ${s} (${b.label})`;
+        preview.textContent = `Initial Risk: ${s} (${b.label})`;
+        const rs = (Number(hazards[j].residualLikelihood)||1) * (Number(hazards[j].residualSeverity)||1);
+        const rb = rrBandOf(rs);
+        const rPreview = row.querySelector('[data-role="rr-preview-residual"]');
+        rPreview.className = `rr-preview ${rb.cls}`;
+        rPreview.textContent = `RR: ${rs} (${rb.label})`;
         renderPreview();
       });
     });
@@ -1509,8 +1565,8 @@ document.getElementById("loadSampleBtn").addEventListener("click", () => {
       personAtRisk:"Operatives",
       reviewDate: fmtDateUK(iso), nextReview: fmtDateUK(addYearsISO(iso,1)),
       hazards:[
-        {hazard:"Working from step/plant access to reach ceiling-level access panel", whoAtRisk:"Operatives, Occupants", controls:"Step/plant provided and inspected by Tetris; short-duration activity (<5 min); three points of contact maintained.", likelihood:2, severity:3},
-        {hazard:"Access panel dropped or mishandled during removal", whoAtRisk:"Operatives, Occupants", controls:"Removed by hand only, passed to floor level.", likelihood:2, severity:2}
+        {hazard:"Working from step/plant access to reach ceiling-level access panel", whoAtRisk:"Operatives, Occupants", controls:"Step/plant provided and inspected by Tetris; short-duration activity (<5 min); three points of contact maintained.", likelihood:3, severity:3, residualLikelihood:1, residualSeverity:3},
+        {hazard:"Access panel dropped or mishandled during removal", whoAtRisk:"Operatives, Occupants", controls:"Removed by hand only, passed to floor level.", likelihood:3, severity:2, residualLikelihood:1, residualSeverity:2}
       ]
     }],
     coshh:["Gyproc Jointing Materials"],

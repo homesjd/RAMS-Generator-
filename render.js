@@ -189,19 +189,24 @@ function renderRiskTaskBlocks(riskRegister){
           const sev = Number(h.severity) || 1;
           const score = lik*sev;
           const band = rrBand(score);
+          const rLik = Number(h.residualLikelihood) || 1;
+          const rSev = Number(h.residualSeverity) || 1;
+          const rScore = rLik*rSev;
+          const rBand = rrBand(rScore);
           return `<tr>
             <td>${esc(h.hazard)}</td>
             <td>${esc(h.whoAtRisk || "Operatives")}</td>
-            <td>${esc(h.controls || "")}</td>
             <td class="${band.cls}" style="text-align:center; font-weight:bold;">${lik}&times;${sev}=${score}<br><span class="rm-sub">${band.label}</span></td>
+            <td>${esc(h.controls || "")}</td>
+            <td class="${rBand.cls}" style="text-align:center; font-weight:bold;">${rLik}&times;${rSev}=${rScore}<br><span class="rm-sub">${rBand.label}</span></td>
           </tr>`;
         }).join("")
-      : `<tr><td colspan="4" class="doc-empty-note">No hazards listed for this task.</td></tr>`;
+      : `<tr><td colspan="5" class="doc-empty-note">No hazards listed for this task.</td></tr>`;
     return `
     <div class="doc-risk-block">
       <div class="doc-risk-task-header">Task: ${esc(t.task)}</div>
-      <table class="doc-risk-table">
-        <tr><th>Hazard</th><th>Who Might Be Harmed</th><th>Existing Controls</th><th>Risk Rating</th></tr>
+      <table class="doc-risk-table doc-hazard-table">
+        <tr><th>Hazard</th><th>Who Might Be Harmed</th><th>Initial Risk<br><span class="rm-sub">(before controls)</span></th><th>Control Measures</th><th>RR<br><span class="rm-sub">(residual, after controls)</span></th></tr>
         ${hazardRows}
       </table>
       <div class="doc-risk-meta-row"><b>Person at Risk:</b> ${textOrDash(t.personAtRisk || "Operatives")}</div>
