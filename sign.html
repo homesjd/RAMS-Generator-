@@ -13,15 +13,19 @@
     max-width:600px; margin:60px auto; background:#fff; border:1px solid var(--line);
     border-radius:6px; padding:24px; text-align:center; font-size:14px; color:#444;
   }
+  .loading-box{
+    max-width:600px; margin:60px auto; text-align:center; font-size:14px; color:#777;
+  }
   .signoff-card{
     max-width:900px; margin:0 auto; background:#fff;
     border-top:4px solid var(--gold);
     padding:22px 24px 30px;
   }
   .signoff-card h2{
-    color:var(--navy1); font-size:16px; margin:0 0 14px;
+    color:var(--navy1); font-size:16px; margin:0 0 6px;
     text-transform:uppercase; letter-spacing:0.05em;
   }
+  .signoff-card p.sub{ font-size:13px; color:#666; margin:0 0 16px; }
   .field{ margin-bottom:14px; }
   .field label{
     display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
@@ -30,6 +34,7 @@
   .field input[type="text"], .field input[type="date"]{
     width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; font-size:15px;
   }
+  .name-hint{ font-size:11.5px; color:#8a8577; margin-top:4px; }
   .confirm-row{
     display:flex; align-items:flex-start; gap:10px; background:#F1EDE3;
     border:1px solid var(--line); border-radius:4px; padding:12px 14px; margin-bottom:16px;
@@ -39,7 +44,7 @@
   .sig-label-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
   .sig-label-row label{ margin:0; }
   .sig-clear{ font-size:11px; color:var(--navy2); background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
-  canvas{ width:100%; height:150px; background:#fff; border:1px solid var(--line); border-radius:3px; touch-action:none; display:block; }
+  canvas.pad{ width:100%; height:150px; background:#fff; border:1px solid var(--line); border-radius:3px; touch-action:none; display:block; }
   .sig-hint{ font-size:11px; color:#8a8577; margin-top:5px; }
   button.submit{
     width:100%; background:var(--gold); color:var(--navy1); border:none; padding:14px;
@@ -47,7 +52,7 @@
     margin:8px 0 6px; text-transform:uppercase;
   }
   button.submit:disabled{ background:#DCD3B8; color:#8a8577; cursor:not-allowed; }
-  .confirmed-view{ display:none; padding:50px 30px 60px; text-align:center; }
+  .confirmed-view{ padding:40px 30px 44px; text-align:center; }
   .stamp{
     display:inline-block; border:4px solid var(--green); color:var(--green); border-radius:8px;
     padding:14px 22px; transform:rotate(-8deg) scale(0.6); opacity:0; font-weight:800;
@@ -56,26 +61,19 @@
   }
   @keyframes stampIn{ to{ transform:rotate(-8deg) scale(1); opacity:1; } }
   .stamp small{ display:block; font-family: ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; margin-top:4px; font-weight:normal; }
-  .confirmed-text{ margin-top:26px; font-size:14px; color:#444; line-height:1.5; }
+  .confirmed-text{ margin-top:22px; font-size:14px; color:#444; line-height:1.5; }
+  .another-btn{
+    margin-top:18px; background:none; border:1px solid var(--navy1); color:var(--navy1);
+    padding:10px 16px; border-radius:4px; font-size:13px; cursor:pointer;
+  }
   @media (prefers-reduced-motion: reduce){ .stamp{ animation:none; opacity:1; transform:rotate(-8deg) scale(1); } }
 </style>
 </head>
 <body>
 
 <div class="wrap" id="wrap">
-  <!-- populated by JS -->
+  <div class="loading-box">Loading RAMS…</div>
 </div>
-
-<!-- Static form for Netlify Forms build-time detection -->
-<form name="rams-signoff" data-netlify="true" netlify-honeypot="bot-field" hidden>
-  <input type="text" name="ramsTitle" />
-  <input type="text" name="ramsProject" />
-  <input type="text" name="operativeName" />
-  <input type="text" name="dateSigned" />
-  <input type="text" name="confirmed" />
-  <textarea name="signatureImage"></textarea>
-  <input name="bot-field" />
-</form>
 
 <script src="logo-data.js"></script>
 <script src="coshh-library.js"></script>
@@ -84,32 +82,36 @@
 <script>
 const wrap = document.getElementById("wrap");
 const params = new URLSearchParams(window.location.search);
-const encoded = params.get("d");
+const ramsId = params.get("id");
 
-if (!encoded) {
-  wrap.innerHTML = `<div class="error-box">No RAMS data found in this link. Ask the sender to re-share the sign-off link from the RAMS Builder.</div>`;
+if (!ramsId) {
+  wrap.innerHTML = `<div class="error-box">No RAMS link ID found. Ask the sender to re-share the sign-off link from the RAMS Builder.</div>`;
 } else {
-  let data;
+  loadRams();
+}
+
+async function loadRams(){
   try {
-    data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
-  } catch(e) {
-    data = null;
-  }
-  if (!data) {
-    wrap.innerHTML = `<div class="error-box">This sign-off link could not be read. Ask the sender to generate a new link from the RAMS Builder.</div>`;
-  } else {
-    renderPage(data);
+    const res = await fetch("/.netlify/functions/rams-get?id=" + encodeURIComponent(ramsId));
+    const record = await res.json();
+    if (!res.ok) throw new Error(record.error || "This RAMS could not be found.");
+    renderPage(record);
+  } catch (e) {
+    wrap.innerHTML = `<div class="error-box">${e.message.replace(/</g,"&lt;")}<br><br>Ask the sender to re-share the sign-off link from the RAMS Builder.</div>`;
   }
 }
 
-function renderPage(data){
+function renderPage(record){
+  const data = record.data;
   wrap.innerHTML = `
-    <div class="doc-wrap">${renderRamsDocument(data)}</div>
+    <div class="doc-wrap" id="docWrap">${renderRamsDocument({ ...data, signatures: record.signatures })}</div>
     <div class="signoff-card" id="signoffCard">
       <h2>Confirm you have read this RAMS</h2>
+      <p class="sub">Type your full name exactly as it should appear on the signed document.</p>
       <div class="field">
-        <label>Your name</label>
-        <input type="text" id="opName" placeholder="Full name">
+        <label>Your full name</label>
+        <input type="text" id="opName" placeholder="Full name, spelled out">
+        <p class="name-hint">Please type your name in full — this will appear on the signed RAMS.</p>
       </div>
       <div class="field">
         <label>Date</label>
@@ -124,14 +126,10 @@ function renderPage(data){
           <label for="sigCanvas">Sign here</label>
           <button type="button" class="sig-clear" id="sigClear">Clear</button>
         </div>
-        <canvas id="sigCanvas"></canvas>
+        <canvas id="sigCanvas" class="pad"></canvas>
         <p class="sig-hint">Draw your signature above with your finger or mouse.</p>
       </div>
       <button class="submit" id="submitBtn" disabled>Sign &amp; Submit</button>
-    </div>
-    <div class="confirmed-view" id="confirmedView">
-      <div class="stamp">Signed &amp; Accepted<small id="stampMeta">—</small></div>
-      <p class="confirmed-text" id="confirmedText"></p>
     </div>
   `;
 
@@ -181,38 +179,42 @@ function renderPage(data){
   [opName, dateInput].forEach(el => el.addEventListener("input", checkReady));
   opConfirm.addEventListener("change", checkReady);
 
-  function encodeForm(d) {
-    return Object.keys(d).map(k => encodeURIComponent(k) + "=" + encodeURIComponent(d[k])).join("&");
-  }
-
-  submitBtn.addEventListener("click", () => {
+  submitBtn.addEventListener("click", async () => {
     submitBtn.disabled = true;
     submitBtn.textContent = "Submitting…";
-    const signatureImage = canvas.toDataURL("image/png");
-    const payload = {
-      "form-name": "rams-signoff",
-      ramsTitle: (data.meta && data.meta.docTitle) || "",
-      ramsProject: (data.meta && data.meta.projectName) || "",
-      operativeName: opName.value.trim(),
-      dateSigned: dateInput.value,
-      confirmed: "yes",
-      signatureImage: signatureImage
-    };
-    fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: encodeForm(payload)
-    }).then(() => {
-      document.getElementById("signoffCard").style.display = "none";
-      document.getElementById("stampMeta").textContent = opName.value.trim() + " · " + dateInput.value;
-      document.getElementById("confirmedText").textContent =
-        "Thanks, " + opName.value.trim() + ". Your sign-off has been recorded.";
-      document.getElementById("confirmedView").style.display = "block";
-    }).catch(() => {
+    try {
+      const res = await fetch("/.netlify/functions/rams-sign", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id: ramsId,
+          role: "operative",
+          name: opName.value.trim(),
+          date: dateInput.value,
+          signatureImage: canvas.toDataURL("image/png")
+        })
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.error || `Submission failed (${res.status})`);
+
+      // Re-render the document with the new signature included
+      document.getElementById("docWrap").innerHTML = renderRamsDocument({ ...updated.data, signatures: updated.signatures });
+
+      const signedName = opName.value.trim();
+      const signedDate = dateInput.value;
+      document.getElementById("signoffCard").outerHTML = `
+        <div class="signoff-card confirmed-view">
+          <div class="stamp">Signed &amp; Accepted<small>${signedName.replace(/</g,"&lt;")} · ${signedDate}</small></div>
+          <p class="confirmed-text">Thanks, ${signedName.replace(/</g,"&lt;")}. Your sign-off has been recorded on this RAMS.</p>
+          <button class="another-btn" id="anotherBtn">Sign as a different operative</button>
+        </div>
+      `;
+      document.getElementById("anotherBtn").addEventListener("click", () => loadRams());
+    } catch (e) {
       submitBtn.disabled = false;
       submitBtn.textContent = "Sign & Submit";
-      alert("Submission failed — check your connection and try again.");
-    });
+      alert("Could not submit: " + e.message);
+    }
   });
 }
 </script>

@@ -334,7 +334,7 @@ const RISK_ASSESSMENT_LIBRARY = {
     task: "Working from step ladders",
     personAtRisk: "Operatives",
     hazards: [
-      { hazard: "Fall from step ladder", whoAtRisk: "Operatives", controls: "Ladder footed, no overreach, inspected before use, kept away from power cables, never leant against unstable surfaces. Confirm site-specific stepladder policy (banned on all Morgan Lovell sites; permit-with-conditions on other sites unless otherwise confirmed).", likelihood: 2, severity: 3 }
+      { hazard: "Fall from step ladder", whoAtRisk: "Operatives", controls: "Ladder footed, no overreach, inspected before use, kept away from power cables, never leant against unstable surfaces. Confirm site-specific stepladder policy — some main contractors ban them outright, others permit with conditions.", likelihood: 2, severity: 3 }
     ]
   },
   "Working on Mobile Scaffold (PASMA)": {

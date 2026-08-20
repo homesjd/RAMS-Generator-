@@ -1,12 +1,11 @@
 // ---------------------------------------------------------------
 // PPE STANDARDS LIBRARY
-// Extracted from: Overbury / Morgan Lovell HS Management System —
-// Personal Protective Equipment Standard (HS-STD-002, Rev 01, 13.02.25)
+// Interior Impressions Ltd PPE standard — BS/EN citations.
 // Source data only — no AI involved. Selecting an item in the RAMS
 // Builder inserts the correct BS/EN citation automatically.
 // ---------------------------------------------------------------
 
-// Mandatory baseline PPE required on every Overbury / Morgan Lovell site
+// Mandatory baseline PPE required on site
 const PPE_MANDATORY_BASELINE = [
   { label: "Safety helmet", standard: "BS EN 397" },
   { label: "Protective gloves", standard: "BS EN 420" },
@@ -20,7 +19,7 @@ const PPE_TASK_SPECIFIC_OPTIONS = [
   { label: "Rigger / woven sticky gloves (manual handling)", standard: "" },
   { label: "Forearm Kevlar / cut-resistant arm protectors (ceiling fixers, glaziers, metal studwork, strip-out, duct fitters, above ceiling level)", standard: "BS EN ISO 13997:2023" },
   { label: "Gauntlets (working with services in floor voids)", standard: "" },
-  { label: "Eye protection (mandatory for ALL strip-out activities)", standard: "BS EN ISO 16321 (Morgan Lovell 2025) / BS EN 166" },
+  { label: "Eye protection (mandatory for ALL strip-out activities)", standard: "BS EN ISO 16321 / BS EN 166" },
   { label: "Prescription safety glasses", standard: "BS EN 166" },
   { label: "Hearing protection (noisy works — noise assessment required, action levels 80/85/87 dB(A))", standard: "" },
   { label: "Ankle-protection footwear (strip-out/demolition, external works, excavation, uneven ground)", standard: "BS EN ISO 20345 S3" }
@@ -32,7 +31,7 @@ const PPE_RPE_OPTIONS = [
   { label: "Air-fed hood (for those who cannot wear a tight-fitting face mask)", standard: "Hood must provide head protection to BS EN 397" }
 ];
 
-// Hard hat colour coding (Overbury / Morgan Lovell sites)
+// Hard hat colour coding
 const PPE_HARD_HAT_COLOURS = {
   "White": "Project Managers, Site/Construction Managers, Operatives, Labourers",
   "Black": "Supervisors (main contractor and subcontractors)",
@@ -40,7 +39,7 @@ const PPE_HARD_HAT_COLOURS = {
   "Blue": "Vulnerable persons — visitors, young persons"
 };
 
-// Hi-vis colour coding (Overbury / Morgan Lovell sites)
+// Hi-vis colour coding
 const PPE_HIVIS_COLOURS = {
   "Yellow": "Project Managers, Site/Construction Managers, Trade Operatives, Labourers, vulnerable persons (visitors, young persons)",
   "Orange": "Traffic / Loading Bay Marshalls / Banksmen / Slingers",
@@ -54,6 +53,6 @@ const PPE_REFERENCED_DOCUMENTS = [
   { ref: "BS EN ISO 20345 S3", title: "Requirements for safety footwear (midsole puncture protection + toecap)" },
   { ref: "BS EN 471 / BS EN 20471", title: "Standard which specifies requirements for high visibility clothing" },
   { ref: "BS EN ISO 13997:2023", title: "Benchmark for protective clothing — mechanical properties and resistance to cutting by sharp objects" },
-  { ref: "BS EN ISO 16321", title: "Eye and face protection for occupational use (Morgan Lovell 2025 standard — supersedes BS EN 166 on Morgan Lovell sites)" },
+  { ref: "BS EN ISO 16321", title: "Eye and face protection for occupational use (current standard — supersedes older BS EN 166 guidance)" },
   { ref: "BS EN 166", title: "European standard for safety glasses and other personal eye protection (legacy / other clients)" }
 ];

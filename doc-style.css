@@ -198,6 +198,24 @@ ul.doc-list li, ol.doc-list li{
   margin-bottom:16px;
 }
 
+/* ---------- Digital signatures ---------- */
+.doc-sig-row{
+  border-bottom:1px dashed #ccc;
+  padding:8px 0;
+  font-size:13px;
+}
+.doc-sig-row:last-child{ border-bottom:none; }
+.doc-sig-label{ font-weight:bold; color:var(--navy1); }
+.doc-sig-details{ margin-top:6px; }
+.doc-sig-img{
+  max-height:55px;
+  max-width:220px;
+  display:block;
+  border-bottom:1px solid #999;
+  margin-bottom:4px;
+}
+.doc-sig-meta{ font-size:12px; color:#333; }
+
 /* ---------- Print rules ---------- */
 @media print{
   body{ background:#fff; }

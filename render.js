@@ -238,16 +238,14 @@ function renderTier2Banner(tier2){
   if (!tier2 || !tier2.required) return "";
   return `
   <div class="doc-tier2-banner">
-    <b>⚠ TIER 2 REVIEW REQUIRED</b> — ${esc(tier2.reason || "This RAMS contains technical elements requiring review by 2 Morgan Lovell Managers (per Morgan Lovell Supply Chain H&S Standards 2025).")}
+    <b>⚠ TIER 2 REVIEW REQUIRED</b> — ${esc(tier2.reason || "This RAMS contains technical elements (e.g. temporary works, electrical, lifting operations) that should receive a second, independent technical review before works commence.")}
   </div>`;
 }
 function renderStepladderBanner(flag){
   if (!flag || !flag.flagged) return "";
   return `
   <div class="doc-tier2-banner">
-    <b>⚠ STEPLADDERS NOT PERMITTED</b> — ${flag.morganLovell
-      ? "Stepladders are banned on Morgan Lovell sites, including as a last resort. Access method must be revised to podium/platform steps, a mobile tower, or a MEWP before this RAMS can be approved."
-      : "Confirm stepladder use against the main contractor's current work-at-height policy before this RAMS is approved."}
+    <b>⚠ STEPLADDER USE NOT YET CONFIRMED</b> — This RAMS references stepladders. Many main contractors now ban them outright, including as a last resort. Confirm current site policy before approval — use podium/platform steps, a mobile tower, or a MEWP where stepladders are prohibited.
   </div>`;
 }
 function renderComplianceNotes(notes){
@@ -255,8 +253,36 @@ function renderComplianceNotes(notes){
   if (!items.length) return "";
   return `
   <div class="doc-section-box">
-    <p class="doc-section-title navy">COMPLIANCE NOTES (Morgan Lovell 2025 Standard)</p>
+    <p class="doc-section-title navy">COMPLIANCE NOTES</p>
     ${listOrEmpty(items)}
+  </div>`;
+}
+
+// ---------------- Digital signatures (preparer + operatives) ----------------
+function renderSignatureBlock(label, entry){
+  if (!entry) {
+    return `<div class="doc-sig-row"><span class="doc-sig-label">${esc(label)}:</span> <span class="doc-empty-note">Not yet signed.</span></div>`;
+  }
+  return `
+  <div class="doc-sig-row">
+    <span class="doc-sig-label">${esc(label)}:</span>
+    <div class="doc-sig-details">
+      <img class="doc-sig-img" src="${entry.signatureImage}" alt="Signature">
+      <div class="doc-sig-meta"><b>${esc(entry.name)}</b> — ${esc(entry.date)}</div>
+    </div>
+  </div>`;
+}
+function renderDigitalSignatures(signatures){
+  const sig = signatures || {};
+  const operatives = sig.operatives || [];
+  return `
+  <div class="doc-section-box">
+    <p class="doc-section-title navy">DIGITAL SIGN-OFF</p>
+    ${renderSignatureBlock("Prepared & Signed By", sig.preparer)}
+    <p class="doc-subhead">Operative Sign-Off</p>
+    ${operatives.length
+      ? operatives.map(o => renderSignatureBlock("Operative", o)).join("")
+      : `<p class="doc-empty-note">No operatives have signed yet.</p>`}
   </div>`;
 }
 
@@ -382,6 +408,9 @@ function renderRamsDocument(data){
       <tr><td class="label">HOUSEKEEPING / MATERIAL STORAGE:</td><td>${textOrDash(data.housekeeping)}</td></tr>
       <tr><td class="label">ENVIRONMENTAL CONSIDERATIONS:</td><td>${textOrDash(data.environmental)}</td></tr>
       <tr><td class="label">HEALTH &amp; SAFETY MONITORING:</td><td>${textOrDash(data.hsMonitoring)}</td></tr>
+      <tr><td class="label">OCCUPATIONAL HEALTH:</td><td>${textOrDash(data.occupationalHealth)}</td></tr>
+      <tr><td class="label">DUST / RESPIRATORY:</td><td>${textOrDash(data.dustRespiratory)}</td></tr>
+      <tr><td class="label">QUALITY:</td><td>${textOrDash(data.quality)}</td></tr>
     </table>
 
     <div class="doc-section-box">
@@ -401,6 +430,8 @@ function renderRamsDocument(data){
     ${renderRiskTaskBlocks(data.riskRegister)}
 
     ${renderComplianceNotes(data.complianceNotes)}
+
+    ${renderDigitalSignatures(data.signatures)}
 
     ${renderSignOffRecords()}
 

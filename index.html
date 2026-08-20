@@ -114,6 +114,18 @@
   .trigger-card .add-btn{ font-size:11.5px; padding:6px 10px; }
   .trigger-card.danger{ border-color:#9B1C1C; background:#FCEDED; }
   .add-btn.danger{ background:#9B1C1C; }
+  .sig-canvas{
+    width:100%; height:130px; background:#fff; border:1px solid var(--line);
+    border-radius:3px; touch-action:none; display:block; margin-top:6px;
+  }
+  .sig-label-row{ display:flex; justify-content:space-between; align-items:baseline; margin-top:12px; }
+  .sig-clear{ font-size:11px; color:var(--navy2); background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
+  .preset-row{ display:flex; gap:6px; margin-bottom:5px; }
+  .preset-row select{ flex:1; font-size:12.5px; padding:6px 7px; }
+  .preset-row button{
+    font-size:11px; padding:6px 9px; border:1px solid var(--navy2); background:#fff; color:var(--navy2);
+    border-radius:4px; cursor:pointer; white-space:nowrap;
+  }
   @media print{
     .form-panel, .topbar, .preview-toolbar, .share-box{ display:none !important; }
     .preview-panel{ padding:0; background:#fff; }
@@ -144,18 +156,35 @@
       <button class="btn btn-outline" id="clearBtn">Clear Form</button>
     </div>
     <div class="share-box no-print" id="complianceBox">
-      <label>RAMS Completeness — Morgan Lovell required sections</label>
+      <label>RAMS Completeness — Required Sections</label>
       <div id="completenessList" style="font-size:13px; margin-bottom:14px;"></div>
       <label>Detected triggers</label>
       <div id="triggersList" style="font-size:13px;"></div>
     </div>
     <div class="share-box no-print" id="shareBox">
-      <label>Link for the operative to view and sign this RAMS</label>
-      <div class="share-row">
-        <input type="text" id="shareLink" readonly>
-        <button class="btn btn-navy" id="copyLinkBtn">Copy</button>
+      <div id="shareStatus" class="hint" style="margin:0 0 10px;"></div>
+      <div id="shareLinkWrap" style="display:none;">
+        <label>Link to send for sign-off</label>
+        <div class="share-row">
+          <input type="text" id="shareLink" readonly>
+          <button class="btn btn-navy" id="copyLinkBtn">Copy</button>
+        </div>
+        <p class="hint">Send this link by text or email. Anyone who opens it sees the full RAMS and can sign — no login needed.</p>
       </div>
-      <p class="hint">Send this link by text or email. It contains the full RAMS — no login needed. Signed confirmations are recorded in your Netlify Forms dashboard.</p>
+      <div id="preparerSignWrap" style="margin-top:16px; display:none;">
+        <label id="preparerSignLabel">You wrote this RAMS — sign it before sharing</label>
+        <div id="preparerAlreadySigned" style="display:none;" class="hint"></div>
+        <div id="preparerSignForm">
+          <div class="field"><label>Your name</label><input type="text" id="preparerName"></div>
+          <div class="field"><label>Date</label><input type="date" id="preparerDate"></div>
+          <div class="sig-label-row">
+            <label style="margin:0;">Sign here</label>
+            <button type="button" class="sig-clear" id="preparerSigClear">Clear</button>
+          </div>
+          <canvas id="preparerSigCanvas" class="sig-canvas"></canvas>
+          <button class="btn btn-gold" id="preparerSignBtn" style="margin-top:10px;" disabled>Sign as Preparer</button>
+        </div>
+      </div>
     </div>
     <div class="doc-wrap" id="docPreview"></div>
   </div>
@@ -167,6 +196,7 @@
 <script src="ppe-library.js"></script>
 <script src="competence-library.js"></script>
 <script src="task-library.js"></script>
+<script src="field-library.js"></script>
 <script src="render.js"></script>
 <script>
 document.getElementById("topLogo").src = LOGO_WHITE_DATA_URI;
@@ -221,10 +251,13 @@ let STATE = {
   taskLighting:"Interior Impressions will be responsible for task lighting for their operatives.",
   communication:"",
   housekeeping:"", environmental:"", hsMonitoring:"",
+  occupationalHealth:"", dustRespiratory:"", quality:"",
   emergency:{ arrangements:"", rescue:"", nearestAE:"", firstAidOnSite:"" },
   tier2:{ required:false, reason:"" },
-  stepladderBanned:{ flagged:false, morganLovell:false },
-  complianceNotes:[]
+  stepladderBanned:{ flagged:false },
+  complianceNotes:[],
+  signatures:{ preparer:null, operatives:[] },
+  ramsId:null
 };
 
 // ---------------------------------------------------------------
@@ -341,7 +374,7 @@ formBody.innerHTML = `
   `)}
 
   ${section("sec-ppe", "7 · PPE / RPE (three-tier, standards library)", `
-    <p class="hint" style="margin-top:0;">Pick from the Overbury/Morgan Lovell PPE standard (auto-fills the BS/EN citation) or add a custom item.</p>
+    <p class="hint" style="margin-top:0;">Pick from the current PPE standard (auto-fills the BS/EN citation) or add a custom item.</p>
     <label style="font-size:11px; text-transform:uppercase; color:var(--navy2); font-weight:bold;">Mandatory Site PPE</label>
     <div class="coshh-picker" style="margin-top:6px;">
       <select id="ppeMandatoryPicker"></select>
@@ -419,10 +452,12 @@ formBody.innerHTML = `
     <div id="coshhChips"></div>
   `)}
 
-  ${section("sec-generic", "11 · Manual Handling, Noise, Access, Height", `
+  ${section("sec-generic", "11 · Manual Handling, Noise, Dust, Vibration, Occ. Health, Access, Height", `
     <div class="field"><label>Manual Handling</label><textarea id="f-manualHandling"></textarea></div>
     <div class="field"><label>Hand Arm Vibration</label><textarea id="f-hav"></textarea></div>
     <div class="field"><label>Noise</label><textarea id="f-noise"></textarea></div>
+    <div class="field"><label>Dust / Respiratory</label><textarea id="f-dustRespiratory"></textarea></div>
+    <div class="field"><label>Occupational Health (hierarchy of controls)</label><textarea id="f-occupationalHealth"></textarea></div>
     <div class="field"><label>Radiation / Lasers</label><textarea id="f-radiation"></textarea></div>
     <div class="field"><label>Access / Egress</label><textarea id="f-access"></textarea></div>
     <div class="field"><label>Work at Height — Persons</label><textarea id="f-waheight-p"></textarea></div>
@@ -449,10 +484,11 @@ formBody.innerHTML = `
     <div class="field"><label>Responsibility for Task Lighting</label><textarea id="f-taskLighting"></textarea></div>
   `)}
 
-  ${section("sec-other", "14 · Communication, Environmental, Monitoring", `
+  ${section("sec-other", "14 · Communication, Environmental, Monitoring, Quality", `
     <div class="field"><label>Workforce Communication (briefing/TBTs, incl. non-English operatives)</label><textarea id="f-communication"></textarea></div>
     <div class="field"><label>Environmental Considerations</label><textarea id="f-environmental"></textarea></div>
     <div class="field"><label>Health &amp; Safety Monitoring</label><textarea id="f-hsMonitoring"></textarea></div>
+    <div class="field"><label>Quality</label><textarea id="f-quality"></textarea></div>
   `)}
 
   ${section("sec-emergency", "15 · Emergency Arrangements & Rescue", `
@@ -462,6 +498,65 @@ formBody.innerHTML = `
     <div class="field"><label>First Aid on Site</label><input type="text" id="f-emFirstAid"></div>
   `)}
 `;
+
+// ---------------------------------------------------------------
+// Preset pickers — inject a "pick a common option" dropdown above
+// each free-text field that has pre-written options in
+// FIELD_OPTIONS. Selecting one fills the textarea; it stays a
+// normal editable field afterwards (custom entry always available).
+// ---------------------------------------------------------------
+const FIELD_PRESET_MAP = {
+  "f-manualHandling": "manualHandling",
+  "f-hav": "handArmVibration",
+  "f-noise": "noise",
+  "f-radiation": "radiation",
+  "f-access": "accessEgress",
+  "f-waheight-p": "workAtHeightPersons",
+  "f-waheight-f": "workAtHeightFalling",
+  "f-wasteRemoval": "wasteRemoval",
+  "f-housekeeping": "housekeeping",
+  "f-leaksSpills": "leaksSpills",
+  "f-securityArrangements": "securityArrangements",
+  "f-pedestrianTraffic": "pedestrianTraffic",
+  "f-fireSafety": "fireSafety",
+  "f-taskLighting": "taskLighting",
+  "f-communication": "communication",
+  "f-environmental": "environmental",
+  "f-hsMonitoring": "hsMonitoring",
+  "f-occupationalHealth": "occupationalHealth",
+  "f-dustRespiratory": "dustRespiratory",
+  "f-quality": "quality",
+  "f-emArrangements": "emergencyArrangements",
+  "f-emRescue": "rescuePlan"
+};
+
+function injectPresetPickers(){
+  Object.keys(FIELD_PRESET_MAP).forEach(fieldId => {
+    const textarea = document.getElementById(fieldId);
+    const options = FIELD_OPTIONS[FIELD_PRESET_MAP[fieldId]];
+    if (!textarea || !options || !options.length) return;
+
+    const row = document.createElement("div");
+    row.className = "preset-row";
+    const select = document.createElement("select");
+    select.innerHTML = `<option value="">Pick a common option…</option>` +
+      options.map((o,i) => `<option value="${i}">${o.label.replace(/</g,"&lt;")}</option>`).join("");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Insert";
+    btn.addEventListener("click", () => {
+      const idx = select.value;
+      if (idx === "") return;
+      textarea.value = options[idx].text;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    row.appendChild(select);
+    row.appendChild(btn);
+    textarea.parentNode.insertBefore(row, textarea);
+  });
+}
+injectPresetPickers();
+
 
 // ---------------------------------------------------------------
 // Bind simple fields
@@ -509,6 +604,9 @@ function syncFormFromState(){
   setVal("f-communication", STATE.communication);
   setVal("f-environmental", STATE.environmental);
   setVal("f-hsMonitoring", STATE.hsMonitoring);
+  setVal("f-occupationalHealth", STATE.occupationalHealth);
+  setVal("f-dustRespiratory", STATE.dustRespiratory);
+  setVal("f-quality", STATE.quality);
   setVal("f-emArrangements", STATE.emergency.arrangements);
   setVal("f-emRescue", STATE.emergency.rescue);
   setVal("f-emNearestAE", STATE.emergency.nearestAE);
@@ -546,7 +644,8 @@ function syncFormFromState(){
  ["f-wasteRemoval","wasteRemoval"],["f-housekeeping","housekeeping"],["f-leaksSpills","leaksSpills"],
  ["f-permitType","permitType"],["f-permitIssuedBy","permitIssuedBy"],["f-securityArrangements","securityArrangements"],
  ["f-pedestrianTraffic","pedestrianTraffic"],["f-fireSafety","fireSafety"],["f-taskLighting","taskLighting"],
- ["f-communication","communication"],["f-environmental","environmental"],["f-hsMonitoring","hsMonitoring"]
+ ["f-communication","communication"],["f-environmental","environmental"],["f-hsMonitoring","hsMonitoring"],
+ ["f-occupationalHealth","occupationalHealth"],["f-dustRespiratory","dustRespiratory"],["f-quality","quality"]
 ].forEach(([id,key]) => bind(id, STATE, key));
 
 [["f-emArrangements","arrangements"],["f-emRescue","rescue"],["f-emNearestAE","nearestAE"],["f-emFirstAid","firstAidOnSite"]
@@ -697,8 +796,8 @@ document.getElementById("msAddFromLibraryBtn").addEventListener("click", () => {
 // Draft is added to the list exactly like a library item; nothing
 // is auto signed-off, it's editable text like everything else.
 // ---------------------------------------------------------------
-function isMorganLovellProject(){
-  return /morgan lovell|\bml\b/.test(((STATE.meta.projectName||"") + " " + (STATE.meta.otherContractors||"")).toLowerCase());
+function stepladdersBannedForProject(){
+  return STATE.stepladderBanned && STATE.stepladderBanned.flagged;
 }
 async function requestAiDraft(type, taskDescription, statusEl){
   statusEl.textContent = "Drafting…";
@@ -711,7 +810,7 @@ async function requestAiDraft(type, taskDescription, statusEl){
         type,
         taskDescription,
         projectName: STATE.meta.projectName || "",
-        isMorganLovell: isMorganLovellProject()
+        stepladdersBanned: stepladdersBannedForProject()
       })
     });
     const data = await res.json();
@@ -1033,20 +1132,127 @@ renderPreview();
 // ---------------------------------------------------------------
 document.getElementById("printBtn").addEventListener("click", () => window.print());
 
-document.getElementById("shareBtn").addEventListener("click", () => {
-  const data = buildDocData();
-  const json = JSON.stringify(data);
-  const encoded = btoa(unescape(encodeURIComponent(json)));
-  const url = new URL("sign.html", window.location.href);
-  url.searchParams.set("d", encoded);
-  document.getElementById("shareLink").value = url.toString();
-  document.getElementById("shareBox").classList.add("show");
+// ---------------------------------------------------------------
+// Sign-off link: save to backend, then let the preparer sign
+// ---------------------------------------------------------------
+document.getElementById("shareBtn").addEventListener("click", async () => {
+  const box = document.getElementById("shareBox");
+  const statusEl = document.getElementById("shareStatus");
+  box.classList.add("show");
+  document.getElementById("shareLinkWrap").style.display = "none";
+  document.getElementById("preparerSignWrap").style.display = "none";
+  statusEl.textContent = "Saving…";
+
+  try {
+    const res = await fetch("/.netlify/functions/rams-save", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ data: buildDocData(), id: STATE.ramsId || undefined })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Save failed (${res.status})`);
+
+    STATE.ramsId = result.id;
+    const url = new URL("sign.html", window.location.href);
+    url.searchParams.set("id", result.id);
+    document.getElementById("shareLink").value = url.toString();
+    document.getElementById("shareLinkWrap").style.display = "block";
+    statusEl.textContent = "";
+
+    // Show preparer sign-in (pre-fill name from Prepared By if given)
+    document.getElementById("preparerSignWrap").style.display = "block";
+    resizePrepCanvas();
+    if (STATE.signatures.preparer) {
+      document.getElementById("preparerSignForm").style.display = "none";
+      document.getElementById("preparerAlreadySigned").style.display = "block";
+      document.getElementById("preparerAlreadySigned").textContent =
+        `Signed by ${STATE.signatures.preparer.name} on ${STATE.signatures.preparer.date}.`;
+    } else {
+      document.getElementById("preparerName").value = STATE.meta.preparedBy || "";
+    }
+  } catch (e) {
+    statusEl.textContent = "Could not save: " + e.message;
+  }
 });
+
 document.getElementById("copyLinkBtn").addEventListener("click", () => {
   const input = document.getElementById("shareLink");
   input.select();
   navigator.clipboard && navigator.clipboard.writeText(input.value);
 });
+
+// --- Preparer signature pad ---
+const prepCanvas = document.getElementById("preparerSigCanvas");
+const prepCtx = prepCanvas.getContext("2d");
+let prepHasSig = false, prepDrawing = false;
+function resizePrepCanvas(){
+  const rect = prepCanvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  prepCanvas.width = rect.width * ratio;
+  prepCanvas.height = rect.height * ratio;
+  prepCtx.scale(ratio, ratio);
+  prepCtx.lineWidth = 2;
+  prepCtx.lineCap = "round";
+  prepCtx.strokeStyle = "#1B2A4B";
+}
+resizePrepCanvas();
+function prepPos(e){
+  const rect = prepCanvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+}
+prepCanvas.addEventListener("mousedown", e => { prepDrawing = true; prepHasSig = true; const p = prepPos(e); prepCtx.beginPath(); prepCtx.moveTo(p.x,p.y); checkPrepReady(); });
+prepCanvas.addEventListener("mousemove", e => { if(!prepDrawing) return; const p = prepPos(e); prepCtx.lineTo(p.x,p.y); prepCtx.stroke(); });
+window.addEventListener("mouseup", () => prepDrawing = false);
+prepCanvas.addEventListener("touchstart", e => { prepDrawing = true; prepHasSig = true; const p = prepPos(e); prepCtx.beginPath(); prepCtx.moveTo(p.x,p.y); e.preventDefault(); checkPrepReady(); }, {passive:false});
+prepCanvas.addEventListener("touchmove", e => { if(!prepDrawing) return; const p = prepPos(e); prepCtx.lineTo(p.x,p.y); prepCtx.stroke(); e.preventDefault(); }, {passive:false});
+prepCanvas.addEventListener("touchend", () => prepDrawing = false);
+document.getElementById("preparerSigClear").addEventListener("click", () => {
+  prepCtx.clearRect(0,0,prepCanvas.width,prepCanvas.height);
+  prepHasSig = false;
+  checkPrepReady();
+});
+const preparerNameInput = document.getElementById("preparerName");
+const preparerDateInput = document.getElementById("preparerDate");
+preparerDateInput.value = todayISO();
+function checkPrepReady(){
+  document.getElementById("preparerSignBtn").disabled =
+    !(preparerNameInput.value.trim() && preparerDateInput.value && prepHasSig);
+}
+preparerNameInput.addEventListener("input", checkPrepReady);
+preparerDateInput.addEventListener("input", checkPrepReady);
+
+document.getElementById("preparerSignBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("preparerSignBtn");
+  btn.disabled = true;
+  btn.textContent = "Signing…";
+  try {
+    const res = await fetch("/.netlify/functions/rams-sign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: STATE.ramsId,
+        role: "preparer",
+        name: preparerNameInput.value.trim(),
+        date: preparerDateInput.value,
+        signatureImage: prepCanvas.toDataURL("image/png")
+      })
+    });
+    const record = await res.json();
+    if (!res.ok) throw new Error(record.error || `Sign failed (${res.status})`);
+    STATE.signatures = record.signatures;
+    renderPreview();
+    document.getElementById("preparerSignForm").style.display = "none";
+    document.getElementById("preparerAlreadySigned").style.display = "block";
+    document.getElementById("preparerAlreadySigned").textContent =
+      `Signed by ${record.signatures.preparer.name} on ${record.signatures.preparer.date}.`;
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Sign as Preparer";
+    alert("Could not sign: " + e.message);
+  }
+});
+
 document.getElementById("clearBtn").addEventListener("click", () => {
   if (!confirm("Clear the whole form?")) return;
   window.location.reload();
@@ -1104,7 +1310,7 @@ function applyImportedState(data){
 }
 
 // ---------------------------------------------------------------
-// Compliance Check (Morgan Lovell Supply Chain H&S Standards 2025)
+// Compliance Check (Interior Impressions H&S Standard)
 // ---------------------------------------------------------------
 function allScopeText(){
   return [
@@ -1137,13 +1343,16 @@ function renderTriggers(){
   if (/strip[\s-]?out|demolition/.test(text)) {
     cards.push({
       title: "Strip-out / Demolition detected",
-      body: `Morgan Lovell 2025 standard requires: mandatory eye protection (BS EN ISO 16321), and consideration of health hazards — ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`,
+      body: `Current standard requires: mandatory eye protection (BS EN ISO 16321), and consideration of health hazards — ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`,
       action: () => {
         if (!STATE.ppe.taskSpecific.includes("Eye protection (mandatory for ALL strip-out activities) — BS EN ISO 16321")) {
           STATE.ppe.taskSpecific = STATE.ppe.taskSpecific.filter(x=>x&&x.trim());
           STATE.ppe.taskSpecific.push("Eye protection (mandatory for ALL strip-out activities) — BS EN ISO 16321");
         }
-        addComplianceNote(`Strip-out/demolition health hazards considered per Morgan Lovell 2025 standard: ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`);
+        if (!STATE.dustRespiratory || !STATE.dustRespiratory.trim()) {
+          STATE.dustRespiratory = FIELD_OPTIONS.dustRespiratory[2].text; // "Significant dust — strip-out/demolition"
+        }
+        addComplianceNote(`Strip-out/demolition health hazards considered: ${STRIP_OUT_HEALTH_HAZARDS.join(", ")}.`);
         syncFormFromState();
       }
     });
@@ -1153,7 +1362,7 @@ function renderTriggers(){
       title: "Hot Works detected",
       body: HOT_WORKS_REQUIREMENTS.join(" "),
       action: () => {
-        addComplianceNote("Hot Works controls per Morgan Lovell 2025: " + HOT_WORKS_REQUIREMENTS.join(" "));
+        addComplianceNote("Hot Works controls: " + HOT_WORKS_REQUIREMENTS.join(" "));
         const hw = STATE.permits.find(p => p.item === "Hot Works");
         if (hw) hw.value = "Yes — PermitPLUS, 2hr fire watch, thermal imaging camera (medium/high risk)";
         syncFormFromState();
@@ -1163,7 +1372,7 @@ function renderTriggers(){
   if (/temporary works?|temp works/.test(text)) {
     cards.push({
       title: "Temporary Works detected — Tier 2 review likely required",
-      body: "RAMS containing Temporary Works elements require a Tier 2 review involving 2 Morgan Lovell Managers.",
+      body: "RAMS containing Temporary Works elements should receive a second, independent technical review before works commence.",
       action: () => {
         STATE.tier2.required = true;
         STATE.tier2.reason = "Contains Temporary Works elements.";
@@ -1175,7 +1384,7 @@ function renderTriggers(){
   if (/electrical|live working/.test(text)) {
     cards.push({
       title: "Electrical Works detected — Tier 2 review likely required",
-      body: "RAMS containing Electrical elements require a Tier 2 review. Live working is not permitted on Morgan Lovell sites except by exceptional approval.",
+      body: "RAMS containing Electrical elements should receive a second, independent technical review. Live working should only proceed with exceptional, documented approval.",
       action: () => {
         STATE.tier2.required = true;
         STATE.tier2.reason = "Contains Electrical Works elements.";
@@ -1201,24 +1410,19 @@ function renderTriggers(){
       title: "Excavation detected",
       body: EXCAVATION_CHECKLIST.join(" "),
       action: () => {
-        addComplianceNote("Excavation checklist per Morgan Lovell 2025: " + EXCAVATION_CHECKLIST.join(" "));
+        addComplianceNote("Excavation checklist: " + EXCAVATION_CHECKLIST.join(" "));
       }
     });
   }
   const plantText = STATE.plantEquipment.join(" ").toLowerCase() + " " + STATE.permits.map(p=>p.item+" "+p.value).join(" ").toLowerCase();
-  const isMorganLovell = /morgan lovell|\bml\b/.test((STATE.meta.projectName + " " + STATE.meta.otherContractors).toLowerCase());
   if (/stepladder|step ladder|hop.?up/.test(text + " " + plantText)) {
     cards.push({
-      title: isMorganLovell ? "⚠ Stepladders detected — BANNED on Morgan Lovell sites" : "Stepladders detected — check client policy",
-      body: isMorganLovell
-        ? "Stepladders are no longer permitted on Morgan Lovell sites, including as a last resort. Use podium/platform enclosing steps, a mobile tower, or a MEWP instead."
-        : "Confirm stepladder policy with the main contractor — Morgan Lovell sites no longer permit stepladders at all (other clients may still allow with a daily permit).",
-      danger: isMorganLovell,
+      title: "⚠ Stepladders detected — confirm current site policy",
+      body: "Many main contractors now ban stepladders outright, including as a last resort. Confirm current policy before relying on this access method — use podium/platform enclosing steps, a mobile tower, or a MEWP where they're prohibited.",
+      danger: true,
       action: () => {
-        STATE.stepladderBanned = { flagged: true, morganLovell: isMorganLovell };
-        addComplianceNote(isMorganLovell
-          ? "Stepladders are banned on Morgan Lovell sites — access method must be revised to podium steps, tower, or MEWP before this RAMS can be approved."
-          : "Stepladder use to be confirmed against main contractor's current work-at-height policy before approval.");
+        STATE.stepladderBanned = { flagged: true };
+        addComplianceNote("Stepladder use to be confirmed against the main contractor's current work-at-height policy before approval — many sites now ban them outright.");
         renderPreview();
         renderTriggers();
       }
@@ -1323,12 +1527,20 @@ document.getElementById("loadSampleBtn").addEventListener("click", () => {
     housekeeping:"Materials hand-carried to 4th floor via Goods Lift, kept at the immediate work area. Tidy-as-you-go maintained; offcuts removed from site on completion.",
     environmental:"Waste removed from site via Interior Impressions Ltd's normal waste route. Noise and dust kept to a minimum given the occupied building.",
     hsMonitoring:"Standards monitored via pre-use checks, supervision by Boris, and sign-off with the Tetris Manager on completion.",
+    occupationalHealth:"Control measures follow the hierarchy of prevention: elimination/substitution, engineering controls, administrative controls, PPE as last resort. No specific health surveillance identified for this short-duration task.",
+    dustRespiratory:"Dust-generating activity limited to cutting plasterboard. FFP3 RPE worn when cutting; no dry sweeping — vacuum used for clean-up.",
+    quality:"Work checked by the operative against the specification on completion. Any defects rectified before sign-off with the Site Manager.",
     emergency:{
       arrangements:"In the event of a fall or injury while using the step/plant access, work stops immediately, first aid is administered, and emergency services are called if required.",
       rescue:"No specialist rescue plan needed given short-duration, low-height step access.",
       nearestAE:"St Thomas' Hospital, Westminster Bridge Road, London SE1 7EH.",
       firstAidOnSite:"Boris Ursu (First Aider) on site throughout."
-    }
+    },
+    tier2:{ required:false, reason:"" },
+    stepladderBanned:{ flagged:false },
+    complianceNotes:[],
+    signatures:{ preparer:null, operatives:[] },
+    ramsId:null
   };
   syncFormFromState();
   renderPreview();
