@@ -175,6 +175,11 @@ const COSHH_LIBRARY = {
   "Fill and Fix Expanding Foam": {
     reference: "387",
     composition: "Dimethyl ether, propane, isobutane, alkanes C14-17 chloro, diphenylmethane",
+    // Contains diphenylmethane diisocyanate (MDI). HSE mandatory
+    // diisocyanate training requirement (in force since 24 Aug 2023)
+    // applies to any operative using this substance. Triggers the
+    // diisocyanate banner in render.js when this item is selected.
+    requiresDiisocyanateTraining: true,
     firstAid: {
       eyes: "Rinse eye with running water for 15 minutes, consult doctor if situation gets worse.",
       skin: "Remove all contaminated clothes and footwear immediately unless stuck to skin; drench affected skin with running water for 10 minutes.",

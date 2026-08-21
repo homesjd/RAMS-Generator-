@@ -20,7 +20,8 @@ const COMPETENCE_LIBRARY = {
   "Asbestos": "Asbestos awareness training",
   "Hoist Operators": "CPCS A20 (Module A goods-only / Module B passenger) / NPORS/CSCS N111 / IPAF Construction hoist (CH) / specific hoist familiarisation training",
   "Demolition Supervisors/Operatives": "Certificate of Competence of Demolition Operatives (CCDO) or equivalent",
-  "Temporary Works Coordinator (TWC) / Supervisor (TWS)": "Formally appointed, competent — per BS5975:2024"
+  "Temporary Works Coordinator (TWC) / Supervisor (TWS)": "Formally appointed, competent — per BS5975:2024",
+  "Diisocyanate / MDI Users": "HSE mandatory diisocyanate awareness training (in force since 24 Aug 2023) — required before use of any diisocyanate/MDI-based product (e.g. PU expanding foam sealants)"
 };
 
 // Work at Height access equipment hierarchy (most preferred first).
@@ -49,6 +50,20 @@ const HOT_WORKS_REQUIREMENTS = [
   "Extinguishers: minimum fire rating 13A, not damaged, tag and pin in place, tested within the last 12 months.",
   "Extinguishers must be labelled, checked and registered with the Principal Contractor.",
   "Acetylene is NOT permitted on some main contractor sites — confirm current policy."
+];
+
+// Diisocyanate / MDI training requirement — HSE mandatory since
+// 24 Aug 2023. Triggered whenever a selected COSHH substance is
+// flagged requiresDiisocyanateTraining (see coshh-library.js, e.g.
+// Fill and Fix Expanding Foam). Same severity tier as the stepladder
+// and hot works triggers — this is a legal training requirement, not
+// a soft suggestion.
+const DIISOCYANATE_TRAINING_REQUIREMENTS = [
+  "HSE mandatory diisocyanate training requirement, in force since 24 August 2023.",
+  "Applies to any operative using or working in proximity to diisocyanate/MDI-based products (e.g. PU expanding foam sealants).",
+  "Operative must hold an in-date diisocyanate awareness training certificate before use.",
+  "Certificate must be refreshed at the interval set by current HSE guidance.",
+  "RAMS Training of Persons Involved section must name the certificate requirement against each operative on the job where a flagged substance is selected."
 ];
 
 // Excavation / underground utilities checklist

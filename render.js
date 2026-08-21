@@ -279,6 +279,24 @@ function renderStepladderBanner(flag){
     <b>⚠ STEPLADDER USE NOT YET CONFIRMED</b> — This RAMS references stepladders. Many main contractors now ban them outright, including as a last resort. Confirm current site policy before approval — use podium/platform steps, a mobile tower, or a MEWP where stepladders are prohibited.
   </div>`;
 }
+// Checks whether any selected COSHH substance is flagged in
+// COSHH_LIBRARY as requiresDiisocyanateTraining (e.g. Fill and Fix
+// Expanding Foam / any MDI-based product).
+function coshhRequiresDiisocyanateTraining(coshhSelections){
+  const names = (coshhSelections || []).filter(x => x && String(x).trim());
+  if (typeof COSHH_LIBRARY === "undefined") return false;
+  return names.some(name => {
+    const entry = COSHH_LIBRARY[name];
+    return !!(entry && entry.requiresDiisocyanateTraining);
+  });
+}
+function renderDiisocyanateBanner(coshhSelections){
+  if (!coshhRequiresDiisocyanateTraining(coshhSelections)) return "";
+  return `
+  <div class="doc-tier2-banner">
+    <b>⚠ DIISOCYANATE TRAINING REQUIRED</b> — This RAMS includes a diisocyanate/MDI-based substance (e.g. PU expanding foam). HSE mandatory diisocyanate training (in force since 24 Aug 2023) applies. Confirm every operative using this substance holds an in-date certificate before work commences.
+  </div>`;
+}
 function renderComplianceNotes(notes){
   const items = (notes || []).filter(x => x && x.trim());
   if (!items.length) return "";
@@ -328,6 +346,7 @@ function renderRamsDocument(data){
     <h1 class="doc-title">${esc(m.docTitle || "RAMS")}</h1>
     ${renderTier2Banner(data.tier2)}
     ${renderStepladderBanner(data.stepladderBanned)}
+    ${renderDiisocyanateBanner(data.coshh)}
 
     <table class="doc-table">
       <tr>
